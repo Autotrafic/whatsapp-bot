@@ -37,6 +37,7 @@ const client = new Client({
         remotePath:
             "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html",
     },
+    restartOnAuthFail: true,
     authStrategy: new RemoteAuth({
         store,
         backupSyncIntervalMs: 300000,
@@ -56,7 +57,7 @@ client.on("ready", () => {
 });
 
 client.on("authenticated", async (session) => {
-    console.info(`[WhatsApp]: Authenticated. Session -> ${session}`);
+    console.info(`[WhatsApp]: Authenticated.`);
     await saveSession(session);
 });
 
