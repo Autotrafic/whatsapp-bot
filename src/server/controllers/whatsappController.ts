@@ -16,10 +16,10 @@ export default async function sendMessage(
 
         const messages = await chat.fetchMessages({ limit: 1 });
         if (messages.length > 0) {
-            res.send(`This chat contains previous messages.`);
+            res.send(`This chat contains previous messages. Previous message: ${messages[0]}`);
         } else {
             await client.sendMessage(chatId, message);
-            res.send(`Message sent successfully. Previous message: ${messages[0]}`);
+            res.send(`Message sent successfully.`);
         }
     } catch (error) {
         const finalError = new CustomError(
