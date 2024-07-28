@@ -1,56 +1,52 @@
 import chalk from "chalk";
-import qrcode from "qrcode-terminal";
 import { Client, RemoteAuth } from "whatsapp-web.js";
-import MongoStore from "../../types/MongoStore";
-import notifySlack from "../services/notifier";
+import qrcode from "qrcode-terminal";
+import MongoStore from "../types/MongoStore";
 
 const clientId = "autotrafic-session";
 
 // eslint-disable-next-line import/no-mutable-exports
-let whatsappClient: any = {};
+let whatsappClient: any = null;
 
 const connectWhatsapp = (isProduction: boolean) =>
     new Promise((resolve, reject) => {
         try {
             const store = new MongoStore();
 
-        const client = new Client({
-            puppeteer: {
-                headless: true,
-                args: [
-                    "--no-sandbox",
-                    "--disable-setuid-sandbox",
-                    "--disable-dev-shm-usage",
-                    "--single-process",
-                    "--no-zygote",
-                ],
-            },
-            webVersionCache: {
-                type: "remote",
-                remotePath:
-                    "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html",
-            },
-            restartOnAuthFail: true,
-            authStrategy: new RemoteAuth({
-                clientId,
-                store,
-                backupSyncIntervalMs: 300000,
-            }),
-        });
+            const client = new Client({
+                puppeteer: {
+                    headless: true,
+                    args: [
+                        "--no-sandbox",
+                        "--disable-setuid-sandbox",
+                        "--disable-dev-shm-usage",
+                        "--single-process",
+                        "--no-zygote",
+                    ],
+                },
+                webVersionCache: {
+                    type: "remote",
+                    remotePath:
+                        "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html",
+                },
+                restartOnAuthFail: true,
+                authStrategy: new RemoteAuth({
+                    clientId,
+                    store,
+                    backupSyncIntervalMs: 300000,
+                }),
+            });
 
-        whatsappClient = client;
+            whatsappClient = client;
 
-        if (isProduction) {
-            try {
-                client.initialize();
-                console.info("[WhatsApp]: Authenticating client...\n");
-            } catch (error) {
-                console.info(error);
-                notifySlack(error);
+            if (isProduction) {
+                try {
+                    client.initialize();
+                    console.info("[WhatsApp]: Authenticating client...\n");
+                } catch (error) {
+                    console.info(error);
+                }
             }
-        }
-
-        resolve(true);
         } catch (error) {
             if (error) {
                 console.log(
@@ -62,7 +58,6 @@ const connectWhatsapp = (isProduction: boolean) =>
                 reject(error);
             }
         }
-        
 
         whatsappClient.on("qr", (qr: string) => {
             qrcode.generate(qr, { small: true });
@@ -74,6 +69,7 @@ const connectWhatsapp = (isProduction: boolean) =>
 
         whatsappClient.on("ready", () => {
             console.info("[WhatsApp]: Client is ready");
+            resolve(true);
         });
 
         whatsappClient.on("authenticated", async () => {
@@ -84,14 +80,12 @@ const connectWhatsapp = (isProduction: boolean) =>
             const error = `[WhatsApp]: Error while trying to restore an existing session. ${message}`;
 
             console.info(error);
-            notifySlack(error);
         });
 
         whatsappClient.on("disconnected", (reason: string) => {
             const error = `[WhatsApp]: Client has been disconnected. ${reason}`;
 
             console.info(error);
-            notifySlack(error);
         });
     });
 

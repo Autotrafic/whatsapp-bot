@@ -24,10 +24,14 @@ const connectDB = (mongoUrl: string) =>
         try {
             mongoose.connect(mongoUrl);
 
-            console.log(
-                chalk.bgBlue.white("Successfully connected with database")
-            );
-            resolve(true);
+            mongoose.connection.once("open", () => {
+                console.log(
+                    chalk.bgBlue.white(
+                        "Successfully connected with the database"
+                    )
+                );
+                resolve(true);
+            });
         } catch (error) {
             if (error) {
                 console.log(
@@ -42,4 +46,3 @@ const connectDB = (mongoUrl: string) =>
     });
 
 export default connectDB;
-

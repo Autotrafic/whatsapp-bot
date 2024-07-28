@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import client from "../middleweares/whatsappClient";
 import CustomError from "../../errors/CustomError";
+import { whatsappClient } from "../../database/whatsapp";
 
 export default async function sendMessage(
     req: Request,
@@ -12,13 +12,13 @@ export default async function sendMessage(
     const chatId = `${phoneNumber}@c.us`;
 
     try {
-        const chat = await client.getChatById(chatId);
+        const chat = await whatsappClient.getChatById(chatId);
 
         const messages = await chat.fetchMessages({ limit: 1 });
         if (messages.length > 0) {
             res.send(`This chat contains previous messages. Previous message: ${messages[0]}`);
         } else {
-            await client.sendMessage(chatId, message);
+            await whatsappClient.sendMessage(chatId, message);
             res.send(`Message sent successfully.`);
         }
     } catch (error) {

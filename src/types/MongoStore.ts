@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 interface Store {
     sessionExists(options: { session: string }): Promise<boolean>;
     save(options: { session: string }): Promise<void>;
-    extract(options: { session: string, path: string }): Promise<void>;
+    extract(options: { session: string, path?: string }): Promise<void>;
     delete(options: { session: string }): Promise<void>;
 }
 
