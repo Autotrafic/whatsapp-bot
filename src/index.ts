@@ -4,6 +4,7 @@ import startServer from "./server/startServer";
 import { connectWhatsapp } from "./database/whatsapp";
 
 const port = +process.env.PORT || 3200;
+console.log(`Server will satrt with port: ${port}`);
 
 const mongoURL = process.env.MONGODB_URL;
 const isProduction = process.env.NODE_ENV === "production";
