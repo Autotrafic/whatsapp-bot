@@ -2,15 +2,15 @@ import "./loadEnvironment";
 import connectDB from "./database";
 import startServer from "./server/startServer";
 import { connectWhatsapp } from "./database/whatsapp";
+import startTempServer from "./server/startTempServer";
 
 const port = +process.env.PORT || 3200;
-console.log(`Server will satrt with port: ${port}`);
-
 const mongoURL = process.env.MONGODB_URL;
 const isProduction = process.env.NODE_ENV === "production";
 
 (async () => {
     try {
+        await startTempServer(port);
         await connectDB(mongoURL);
         await connectWhatsapp(isProduction);
         await startServer(port);
