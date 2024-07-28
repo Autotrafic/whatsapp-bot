@@ -6,7 +6,7 @@ const startTempServer = (port: number) =>
     new Promise((resolve) => {
         const app = express();
 
-        const server = app.listen(port + 1, () => {
+        const server = app.listen(port, () => {
             server.close();
             console.log("Cycled temporary server");
             resolve(true);
