@@ -14,6 +14,12 @@ const connectWhatsapp = (isProduction: boolean) =>
             const store = new MongoStore();
 
             const client = new Client({
+                authStrategy: new RemoteAuth({
+                    clientId,
+                    store,
+                    backupSyncIntervalMs: 300000,
+                }),
+                restartOnAuthFail: true,
                 puppeteer: {
                     headless: true,
                     args: [
@@ -29,12 +35,6 @@ const connectWhatsapp = (isProduction: boolean) =>
                     remotePath:
                         "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html",
                 },
-                restartOnAuthFail: true,
-                authStrategy: new RemoteAuth({
-                    clientId,
-                    store,
-                    backupSyncIntervalMs: 300000,
-                }),
             });
 
             whatsappClient = client;

@@ -17,3 +17,12 @@ const isProduction = process.env.NODE_ENV === "production";
         process.exit(1);
     }
 })();
+
+process.on("uncaughtException", (err) => {
+    console.error("There was an uncaught error", err);
+    process.exit(1);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+    console.error("Unhandled Rejection at:", promise, "reason:", reason);
+});
