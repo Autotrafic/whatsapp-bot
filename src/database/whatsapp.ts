@@ -2,6 +2,7 @@ import chalk from "chalk";
 import { Client, RemoteAuth } from "whatsapp-web.js";
 import qrcode from "qrcode-terminal";
 import MongoStore from "../types/MongoStore";
+import notifySlack from "../server/services/notifier";
 
 const clientId = "autotrafic-session";
 
@@ -60,6 +61,7 @@ const connectWhatsapp = (isProduction: boolean) =>
         }
 
         whatsappClient.on("qr", (qr: string) => {
+            notifySlack("WHATSAPP BOT DISCONNECTED!");
             qrcode.generate(qr, { small: true });
         });
 
