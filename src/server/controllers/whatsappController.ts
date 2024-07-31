@@ -75,7 +75,7 @@ export async function searchRegexInChat(
         if (foundMessages.length > 0) {
             res.status(200).send({ existsEquivalences: true });
         } else {
-            res.status(404).send({ existsEquivalences: false });
+            res.status(200).send({ existsEquivalences: false });
         }
     } catch (error) {
         const finalError = new CustomError(
