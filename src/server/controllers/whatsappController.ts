@@ -13,6 +13,28 @@ export async function sendMessage(
     const chatId = `${phoneNumber}@c.us`;
 
     try {
+        await whatsappClient.sendMessage(chatId, message);
+        res.send(`Message sent successfully.`);
+    } catch (error) {
+        const finalError = new CustomError(
+            500,
+            "Error sending WhatsApp message.",
+            `Error sending WhatsApp message. \n ${error}`
+        );
+        next(finalError);
+    }
+}
+
+export async function sendFirstTouchMessage(
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> {
+    const { phoneNumber, message } = req.body;
+
+    const chatId = `${phoneNumber}@c.us`;
+
+    try {
         const chat = await whatsappClient.getChatById(chatId);
 
         const messages = await chat.fetchMessages({ limit: 1 });
