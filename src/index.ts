@@ -2,7 +2,8 @@ import "./loadEnvironment";
 import connectDB from "./database";
 import startServer from "./server/startServer";
 import { connectWhatsapp } from "./database/whatsapp";
-import {startTempServer, stopTempServer, } from "./server/startTempServer";
+import { startTempServer, stopTempServer } from "./server/startTempServer";
+import notifySlack from "./server/services/notifier";
 
 const port = +process.env.PORT || 3200;
 const mongoURL = process.env.MONGODB_URL;
@@ -11,7 +12,7 @@ const isProduction = process.env.NODE_ENV === "production";
 (async () => {
     try {
         await startTempServer(port);
-        
+
         await connectDB(mongoURL);
         await connectWhatsapp(isProduction);
 
@@ -25,7 +26,7 @@ const isProduction = process.env.NODE_ENV === "production";
 
 process.on("uncaughtException", (err) => {
     console.error("There was an uncaught error", err);
-    process.exit(1);
+    notifySlack(`App crashing. Uncaught exception: ${err}`);
 });
 
 process.on("unhandledRejection", (reason, promise) => {
