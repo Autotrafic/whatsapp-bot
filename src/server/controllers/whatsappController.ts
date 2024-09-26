@@ -14,7 +14,7 @@ export async function sendMessage(
 
     try {
         await whatsappClient.sendMessage(chatId, message);
-        res.send(`Message sent successfully.`);
+        res.send({ message: `Message sent successfully.` });
     } catch (error) {
         const finalError = new CustomError(
             500,
@@ -44,7 +44,7 @@ export async function sendFirstTouchMessage(
             );
         } else {
             await whatsappClient.sendMessage(chatId, message);
-            res.send(`Message sent successfully.`);
+            res.send({ message: `Message sent successfully.` });
         }
     } catch (error) {
         const finalError = new CustomError(
