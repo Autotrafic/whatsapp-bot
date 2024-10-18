@@ -25,6 +25,60 @@ export async function sendMessage(
     }
 }
 
+export async function getClientChats(
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> {
+    try {
+        const chats = await whatsappClient.getChats();
+
+        if (!chats || chats.length === 0) {
+            res.status(404).send({ message: "No chats found." });
+        }
+
+        res.send({ message: "Chats retrieved successfully.", chats });
+    } catch (error) {
+        const finalError = new CustomError(
+            500,
+            `Error retrieving WhatsApp chats. \n ${error}`,
+            `Error retrieving WhatsApp chats. \n ${error}`
+        );
+        next(finalError);
+    }
+}
+
+export async function getChatMessages(
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> {
+    const { chatId } = req.params;
+
+    try {
+        const chat = await whatsappClient.getChatById(chatId);
+
+        if (!chat) {
+            res.status(404).send({ message: `Chat with ID ${chatId} not found.` });
+        }
+
+        const messages = await chat.fetchMessages({ limit: 50 });
+
+        if (!messages || messages.length === 0) {
+            res.status(404).send({ message: "No messages found in this chat." });
+        }
+
+        res.send({ message: "Messages retrieved successfully.", messages });
+    } catch (error) {
+        const finalError = new CustomError(
+            500,
+            `Error retrieving WhatsApp chat messages. \n ${error}`,
+            `Error retrieving WhatsApp chat messages. \n ${error}`
+        );
+        next(finalError);
+    }
+}
+
 export async function sendFirstTouchMessage(
     req: Request,
     res: Response,
