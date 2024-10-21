@@ -9,9 +9,7 @@ export default async function notifySlack(message: string, channel?: 'whatsapp_m
 
   if (channel === 'whatsapp_messages') channelWebhook = whatsMessagesWebhook;
   try {
-    await axios.post(channelWebhook, {
-      text: message,
-    });
+    await axios.post(channelWebhook, { text: message });
   } catch (error) {
     console.error('Error sending notification to Slack:', error.message);
   }
