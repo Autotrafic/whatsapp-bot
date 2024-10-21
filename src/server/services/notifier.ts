@@ -4,7 +4,11 @@ import axios from 'axios';
 const backendNotifications = process.env.SLACK_BACKEND_NOTIFICATIONS_WEBHOOK_URL;
 const whatsMessagesWebhook = process.env.SLACK_WHATS_MESSAGES_WEBHOOK_URL;
 
+
+
 export default async function notifySlack(message: string, channel?: 'whatsapp_messages') {
+  console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', backendNotifications, whatsMessagesWebhook);
+  
   let channelWebhook = backendNotifications;
 
   if (channel === 'whatsapp_messages') channelWebhook = whatsMessagesWebhook;
