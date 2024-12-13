@@ -14,7 +14,6 @@ export const generalError = (
     error: CustomError,
     req: Request,
     res: Response,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     next: NextFunction
 ) => {
     let errorCode;

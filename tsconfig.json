@@ -15,7 +15,6 @@
         "src/**/*.ts",
         "./**/*.ts",
         "src/types/*.js",
-        ".eslintrc.js",
         "jest.config.js",
         "api/*.ts",
         "vercel.json",

@@ -6,7 +6,6 @@ import notifySlack from '../server/services/notifier';
 
 const clientId = 'autotrafic-session';
 
-// eslint-disable-next-line import/no-mutable-exports
 let whatsappClient: any = null;
 
 const connectWhatsapp = (isProduction: boolean) =>

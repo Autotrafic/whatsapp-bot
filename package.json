@@ -4,8 +4,8 @@
     "description": "",
     "main": "dist/index.js",
     "engines": {
-    "node": "16.x"
-  },
+        "node": "16.x"
+    },
     "scripts": {
         "tsc": "tsc",
         "tsc:dev": "tsc -w",
@@ -41,13 +41,7 @@
         "@types/node": "^20.11.30",
         "@types/node-fetch": "^2.6.11",
         "@types/qrcode-terminal": "^0.12.2",
-        "@typescript-eslint/eslint-plugin": "^7.4.0",
-        "@typescript-eslint/parser": "^7.4.0",
         "eslint": "^8.57.0",
-        "eslint-config-airbnb-base": "^15.0.0",
-        "eslint-config-airbnb-typescript": "^18.0.0",
-        "eslint-config-prettier": "^9.1.0",
-        "eslint-plugin-import": "^2.29.1",
         "mongodb-memory-server": "^9.1.8",
         "nodemon": "^3.1.0",
         "typescript": "^5.4.3"
