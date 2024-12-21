@@ -21,6 +21,22 @@ export async function sendMessage(req: Request, res: Response, next: NextFunctio
   }
 }
 
+export async function sendMessageToAnyChatType(req: Request, res: Response, next: NextFunction): Promise<void> {
+  const { chatId, message } = req.body;
+
+  try {
+    await whatsappClient.sendMessage(chatId, message);
+    res.send({ message: `Message sent successfully.` });
+  } catch (error) {
+    const finalError = new CustomError(
+      500,
+      'Error sending WhatsApp message.',
+      `Error sending WhatsApp message. \n ${error}`
+    );
+    next(finalError);
+  }
+}
+
 export async function getClientChats(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const chats = await whatsappClient.getChats();

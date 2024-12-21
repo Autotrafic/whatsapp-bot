@@ -77,9 +77,7 @@ const connectWhatsapp = (isProduction: boolean) =>
       console.info(error);
     });
 
-    whatsappClient.on('message', (message: any) => {
-      if (message) notifySlack('🙋🏻‍♂️ Nuevo mensaje de WhatsApp', 'whatsapp_messages');
-    });
+    whatsappClient.on('message', (message: any) => {});
   });
 
 export { connectWhatsapp, whatsappClient };
