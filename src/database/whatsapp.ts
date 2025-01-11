@@ -37,7 +37,8 @@ const connectWhatsapp = (isProduction: boolean) =>
           client.initialize();
           console.info('[WhatsApp]: Authenticating client...\n');
         } catch (error) {
-          console.info(error);
+          console.error('[WhatsApp]: Failed to authenticate. Retrying...');
+          console.info(error.message);
         }
       }
     } catch (error) {
