@@ -107,20 +107,16 @@ export async function sendFirstTouchMessage(req: Request, res: Response, next: N
 }
 
 export async function searchRegexInChat(req: Request, res: Response, next: NextFunction): Promise<void> {
-  const { phoneNumber, searchString } = req.body;
+  const { phoneNumber, searchString, limit = 100 } = req.body;
   const chatId = `${phoneNumber}@c.us`;
 
   try {
     const chat = await whatsappClient.getChatById(chatId);
     const messages = (await chat.fetchMessages()) as Message[];
 
-    const foundMessages = messages.filter((message) => message.body.includes(searchString));
+    const foundMessages = messages.slice(-limit).filter((message) => message.body.includes(searchString));
 
-    if (foundMessages.length > 0) {
-      res.status(200).send({ existsEquivalences: true });
-    } else {
-      res.status(200).send({ existsEquivalences: false });
-    }
+    res.status(200).send({ existsEquivalences: foundMessages.length > 0 ? true : false });
   } catch (error) {
     const finalError = new CustomError(
       500,
