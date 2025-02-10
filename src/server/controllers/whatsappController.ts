@@ -81,6 +81,31 @@ export async function getChatMessages(req: Request, res: Response, next: NextFun
   }
 }
 
+export async function sendSeenChat(req: Request, res: Response, next: NextFunction): Promise<void> {
+  const { chatId } = req.params;
+
+  try {
+    const chat = await whatsappClient.getChatById(chatId);
+
+    if (!chat) {
+      res.status(404).send({ message: `Chat with ID ${chatId} not found.` });
+      return;
+    }
+
+    const messages = await chat.sendSeen();
+
+    res.send({ message: 'Seen chat sended successfully.', messages });
+    return;
+  } catch (error) {
+    const finalError = new CustomError(
+      500,
+      `Error sending seen Whatsapp chat. \n ${error}`,
+      `Error sending seen Whatsapp chat. \n ${error}`
+    );
+    next(finalError);
+  }
+}
+
 export async function sendFirstTouchMessage(req: Request, res: Response, next: NextFunction): Promise<void> {
   const { phoneNumber, message } = req.body;
 

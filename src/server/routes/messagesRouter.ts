@@ -6,6 +6,7 @@ import {
   getClientChats,
   getChatMessages,
   sendMessageToAnyChatType,
+  sendSeenChat,
 } from '../controllers/whatsappController';
 
 const messagesRouter = express.Router();
@@ -15,6 +16,7 @@ messagesRouter.post('/send-any-chat', sendMessageToAnyChatType);
 
 messagesRouter.get('/chats', getClientChats);
 messagesRouter.get('/chat-messages/:chatId', getChatMessages);
+messagesRouter.get('/seen-chat/:chatId', sendSeenChat);
 
 messagesRouter.post('/first-touch-whtspp', sendFirstTouchMessage);
 
