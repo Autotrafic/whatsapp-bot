@@ -101,7 +101,8 @@ export async function getChatMessages(req: Request, res: Response, next: NextFun
         return {
           id: msg.id.id,
           body: msg.body,
-          from: msg.from,
+          fromMe: msg.id.fromMe,
+          viewed: msg?._data?.viewed,
           timestamp: msg.timestamp,
           type: msg.type,
           hasMedia: msg.hasMedia,
