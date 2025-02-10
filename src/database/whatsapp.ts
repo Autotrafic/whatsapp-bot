@@ -22,7 +22,15 @@ const connectWhatsapp = (isProduction: boolean) =>
         restartOnAuthFail: true,
         puppeteer: {
           headless: true,
-          args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--single-process', '--no-zygote'],
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--disable-gpu',
+            '--single-process',
+            '--no-zygote',
+          ],
         },
         webVersionCache: {
           type: 'remote',
