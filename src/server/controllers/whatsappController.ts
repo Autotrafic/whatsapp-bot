@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { Message } from 'whatsapp-web.js';
+import { Chat, Message, MessageMedia } from 'whatsapp-web.js';
 import CustomError from '../../errors/CustomError';
 import { whatsappClient } from '../../database/whatsapp';
 
@@ -39,13 +39,28 @@ export async function sendMessageToAnyChatType(req: Request, res: Response, next
 
 export async function getClientChats(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const chats = await whatsappClient.getChats();
+    const chats: any[] = await whatsappClient.getChats();
 
     if (!chats || chats.length === 0) {
       res.status(404).send({ message: 'No chats found.' });
     }
 
-    res.send({ message: 'Chats retrieved successfully.', chats });
+    const chatsWithProfileImages: WChat[] = await Promise.all(
+      chats.map(async (chat) => {
+        const profilePicUrl = await whatsappClient.getProfilePicUrl(chat.id._serialized).catch(() => {});
+        return {
+          id: chat.id._serialized,
+          name: chat.name,
+          isGroup: chat.isGroup,
+          unreadCount: chat.unreadCount,
+          timestamp: chat.timestamp,
+          lastMessage: { viewed: chat.lastMessage?._data?.viewed, body: chat.lastMessage?.body },
+          profilePicUrl,
+        };
+      })
+    );
+
+    res.send({ message: 'Chats retrieved successfully.', chats: chatsWithProfileImages });
   } catch (error) {
     const finalError = new CustomError(
       500,
@@ -67,10 +82,36 @@ export async function getChatMessages(req: Request, res: Response, next: NextFun
       return;
     }
 
-    const messages = await chat.fetchMessages({ limit: 50 });
+    const messages: any[] = await chat.fetchMessages({ limit: 50 });
 
-    res.send({ message: 'Messages retrieved successfully.', messages });
-    return;
+    const messagesWithMedia = await Promise.all(
+      messages.map(async (msg) => {
+        let mediaBase64: string | null = null;
+
+        if (msg.hasMedia) {
+          try {
+            const media: MessageMedia = await msg.downloadMedia();
+            mediaBase64 = `data:${media.mimetype};base64,${media.data}`;
+          } catch (err) {
+            console.error(`Failed to download media for message ${msg.id.id}: ${err}`);
+            mediaBase64 = null;
+          }
+        }
+
+        return {
+          id: msg.id.id,
+          body: msg.body,
+          from: msg.from,
+          timestamp: msg.timestamp,
+          type: msg.type,
+          hasMedia: msg.hasMedia,
+          mediaUrl: mediaBase64,
+          mimetype: msg.hasMedia ? mediaBase64?.split(';')[0].replace('data:', '') : null,
+        };
+      })
+    );
+
+    res.send({ message: 'Messages retrieved successfully.', messages: messagesWithMedia });
   } catch (error) {
     const finalError = new CustomError(
       500,
