@@ -11,12 +11,12 @@ const isProduction = process.env.NODE_ENV === "production";
 
 (async () => {
     try {
-        await startTempServer(port);
+        // await startTempServer(port);
 
         await connectDB(mongoURL);
         await connectWhatsapp(isProduction);
 
-        await stopTempServer();
+        // await stopTempServer();
 
         await startServer(port);
     } catch (error) {
