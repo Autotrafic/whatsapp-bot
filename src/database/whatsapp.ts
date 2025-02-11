@@ -8,7 +8,7 @@ const clientId = 'autotrafic-session';
 
 let whatsappClient: any = null;
 
-const connectWhatsapp = (isProduction: boolean) =>
+const connectWhatsapp = () =>
   new Promise((resolve, reject) => {
     try {
       const store = new MongoStore();
@@ -40,14 +40,12 @@ const connectWhatsapp = (isProduction: boolean) =>
 
       whatsappClient = client;
 
-      if (isProduction) {
-        try {
-          client.initialize();
-          console.info('[WhatsApp]: Authenticating client...\n');
-        } catch (error) {
-          console.error('[WhatsApp]: Failed to authenticate. Retrying...');
-          console.info(error.message);
-        }
+      try {
+        client.initialize();
+        console.info('[WhatsApp]: Authenticating client...\n');
+      } catch (error) {
+        console.error('[WhatsApp]: Failed to authenticate. Retrying...');
+        console.info(error.message);
       }
     } catch (error) {
       if (error) {

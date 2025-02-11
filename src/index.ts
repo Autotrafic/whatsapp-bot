@@ -6,14 +6,13 @@ import notifySlack from "./server/services/notifier";
 
 const port = +process.env.PORT || 3200;
 const mongoURL = process.env.MONGODB_URL;
-const isProduction = process.env.NODE_ENV === "production";
 
 (async () => {
     try {
         // await startTempServer(port);
 
         await connectDB(mongoURL);
-        await connectWhatsapp(isProduction);
+        await connectWhatsapp();
 
         // await stopTempServer();
 

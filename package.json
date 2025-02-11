@@ -10,10 +10,8 @@
         "tsc": "tsc",
         "tsc:dev": "tsc -w",
         "start": "cross-env NODE_ENV=production node .",
-        "dev": "cross-env NODE_ENV=development node .",
         "dev:watch": "nodemon -q",
-        "build": "npm run tsc",
-        "vercel-build": "echo hello"
+        "build": "npm run tsc"
     },
     "keywords": [],
     "author": "AutoTrafic Gestoria",
