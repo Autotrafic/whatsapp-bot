@@ -2,7 +2,6 @@ import "./loadEnvironment";
 import connectDB from "./database";
 import startServer from "./server/startServer";
 import { connectWhatsapp } from "./database/whatsapp";
-import { startTempServer, stopTempServer } from "./server/startTempServer";
 import notifySlack from "./server/services/notifier";
 
 const port = +process.env.PORT || 3200;
