@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { Chat, Message, MessageMedia } from 'whatsapp-web.js';
 import CustomError from '../../errors/CustomError';
 import { whatsappClient } from '../../database/whatsapp';
+import { parseMessageFromPrimitive } from '../helpers/parser';
 
 export async function sendMessage(req: Request, res: Response, next: NextFunction): Promise<void> {
   const { phoneNumber, message } = req.body;
@@ -86,29 +87,9 @@ export async function getChatMessages(req: Request, res: Response, next: NextFun
 
     const messagesWithMedia = await Promise.all(
       messages.map(async (msg) => {
-        let mediaBase64: string | null = null;
+        const parsedMessage = await parseMessageFromPrimitive(msg);
 
-        if (msg.hasMedia) {
-          try {
-            const media: MessageMedia = await msg.downloadMedia();
-            mediaBase64 = `data:${media.mimetype};base64,${media.data}`;
-          } catch (err) {
-            console.error(`Failed to download media for message ${msg.id.id}: ${err}`);
-            mediaBase64 = null;
-          }
-        }
-
-        return {
-          id: msg.id.id,
-          body: msg.body,
-          fromMe: msg.id.fromMe,
-          viewed: msg?._data?.viewed,
-          timestamp: msg.timestamp,
-          type: msg.type,
-          hasMedia: msg.hasMedia,
-          mediaUrl: mediaBase64,
-          mimetype: msg.hasMedia ? mediaBase64?.split(';')[0].replace('data:', '') : null,
-        };
+        return parsedMessage;
       })
     );
 

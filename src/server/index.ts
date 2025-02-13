@@ -5,6 +5,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { generalError, notFoundError } from "../errors/generalError";
 import messagesRouter from "./routes/messagesRouter";
+import { addSseClient } from "./sse/controllers";
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use(
 
 app.get("/", (req, res) => res.send("Working!"));
 
+app.get('/connect', addSseClient);
 app.use("/messages", messagesRouter);
 
 app.use(notFoundError);

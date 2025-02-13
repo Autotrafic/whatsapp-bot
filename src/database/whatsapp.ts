@@ -3,6 +3,8 @@ import { Client, RemoteAuth } from 'whatsapp-web.js';
 import qrcode from 'qrcode-terminal';
 import MongoStore from '../types/MongoStore';
 import notifySlack from '../server/services/notifier';
+import sseClientManager from '../server/sse/sseClientManager';
+import { parseMessageFromPrimitive } from '../server/helpers/parser';
 
 const clientId = 'autotrafic-session';
 
@@ -84,7 +86,13 @@ const connectWhatsapp = () =>
       console.info(error);
     });
 
-    whatsappClient.on('message', (message: any) => {});
+    whatsappClient.on('message', async (message: any) => {
+      if (sseClientManager['clients'].length > 0) {
+        const parsedMessage = await parseMessageFromPrimitive(message);
+
+        sseClientManager.broadcast('whatsapp-message', parsedMessage);
+      }
+    });
   });
 
 export { connectWhatsapp, whatsappClient };
