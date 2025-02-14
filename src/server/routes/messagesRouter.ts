@@ -1,18 +1,21 @@
 import express from 'express';
+import multer from 'multer';
 import {
   sendFirstTouchMessage,
   searchRegexInChat,
   sendMessage,
   getClientChats,
   getChatMessages,
-  sendMessageToAnyChatType,
   sendSeenChat,
+  sendMessageToChat,
 } from '../controllers/whatsappController';
+
+const upload = multer({ limits: { fileSize: 2 * 1024 * 1024 * 1024 }, dest: 'uploads/' });
 
 const messagesRouter = express.Router();
 
 messagesRouter.post('/send', sendMessage);
-messagesRouter.post('/send-any-chat', sendMessageToAnyChatType);
+messagesRouter.post('/send-any-chat', upload.any(), sendMessageToChat);
 
 messagesRouter.get('/chats', getClientChats);
 messagesRouter.get('/chat-messages/:chatId', getChatMessages);

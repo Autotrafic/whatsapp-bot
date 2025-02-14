@@ -1,8 +1,12 @@
+import fs from 'fs';
+import path from 'path';
 import { Request, Response, NextFunction } from 'express';
 import { Chat, Message, MessageMedia } from 'whatsapp-web.js';
 import CustomError from '../../errors/CustomError';
 import { whatsappClient } from '../../database/whatsapp';
 import { parseMessageFromPrimitive } from '../helpers/parser';
+import { MediaFile, SendMediaRequest } from '../interfaces/import';
+import { cleanupFiles } from '../helpers/files';
 
 export async function sendMessage(req: Request, res: Response, next: NextFunction): Promise<void> {
   const { phoneNumber, message } = req.body;
@@ -22,22 +26,63 @@ export async function sendMessage(req: Request, res: Response, next: NextFunctio
   }
 }
 
-export async function sendMessageToAnyChatType(req: Request, res: Response, next: NextFunction): Promise<void> {
-  const { chatId, message } = req.body;
+export async function sendMessageToChat(req: SendMediaRequest, res: Response, next: NextFunction): Promise<void> {
+  const body = { ...req.body };
+  const files = req.files as Express.Multer.File[];
+  const chatId = body.chatId;
+  const message = body?.message;
 
   try {
-    await whatsappClient.sendMessage(chatId, message);
-    res.send({ message: `Message sent successfully.` });
+    if ((!files || files.length === 0) && message) {
+      await whatsappClient.sendMessage(chatId, message);
+      res.send({ message: `Message sent successfully.` });
+      return;
+    }
+
+    const mediaFiles: MediaFile[] = files.map((file) => {
+      const base64Data = fs.readFileSync(file.path, 'base64');
+
+      return {
+        filename: file.originalname,
+        mimetype: file.mimetype,
+        base64Data: base64Data,
+      };
+    });
+
+    let isFirstFile = true;
+
+    for (const file of mediaFiles) {
+      const { base64Data, filename, mimetype } = file;
+
+      let media: MessageMedia;
+
+      if (base64Data && mimetype) {
+        media = new MessageMedia(mimetype, base64Data, filename);
+      } else {
+        continue;
+      }
+
+      if (isFirstFile && message) {
+        await whatsappClient.sendMessage(chatId, media, { caption: message });
+        isFirstFile = false;
+      } else {
+        await whatsappClient.sendMessage(chatId, media);
+      }
+    }
+
+    cleanupFiles(files);
+
+    res.send({ message: 'Message and media sent successfully!' });
   } catch (error) {
+    console.error(error.message);
     const finalError = new CustomError(
       500,
-      'Error sending WhatsApp message.',
-      `Error sending WhatsApp message. \n ${error}`
+      `Error sending WhatsApp message to a chat. \n ${error}`,
+      `Error sending WhatsApp message to a chat. \n ${error}`
     );
     next(finalError);
   }
 }
-
 export async function getClientChats(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const chats: any[] = await whatsappClient.getChats();
