@@ -1,4 +1,4 @@
-export async function parseMessageFromPrimitive(message: any) {
+export async function parseMessageFromPrimitive(message: any): Promise<WMessage> {
   let mediaBase64: string | null = null;
 
   if (message.hasMedia) {
@@ -22,5 +22,7 @@ export async function parseMessageFromPrimitive(message: any) {
     hasMedia: message.hasMedia,
     mediaUrl: mediaBase64,
     mimetype: message.hasMedia ? mediaBase64?.split(';')[0].replace('data:', '') : null,
+    senderId: message._data?.author?._serialized || message._data?.from?._serialized,
+    senderPhone: message._data?.author?.user || message._data?.from?.user,
   };
 }

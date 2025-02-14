@@ -8,6 +8,25 @@ import { parseMessageFromPrimitive } from '../helpers/parser';
 import { MediaFile, SendMediaRequest } from '../interfaces/import';
 import { cleanupFiles } from '../helpers/files';
 
+export async function getPrimitiveChats(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const chats: any[] = await whatsappClient.getChats();
+
+    if (!chats || chats.length === 0) {
+      res.status(404).send({ message: 'No chats found.' });
+    }
+
+    res.send({ message: 'Chats retrieved successfully.', chats });
+  } catch (error) {
+    const finalError = new CustomError(
+      500,
+      `Error retrieving WhatsApp chats. \n ${error}`,
+      `Error retrieving WhatsApp chats. \n ${error}`
+    );
+    next(finalError);
+  }
+}
+
 export async function sendMessage(req: Request, res: Response, next: NextFunction): Promise<void> {
   const { phoneNumber, message } = req.body;
 
@@ -83,7 +102,8 @@ export async function sendMessageToChat(req: SendMediaRequest, res: Response, ne
     next(finalError);
   }
 }
-export async function getClientChats(req: Request, res: Response, next: NextFunction): Promise<void> {
+
+export async function getChats(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const chats: any[] = await whatsappClient.getChats();
 
@@ -97,7 +117,7 @@ export async function getClientChats(req: Request, res: Response, next: NextFunc
         return {
           id: chat.id._serialized,
           name: chat.name,
-          isGroup: chat.isGroup,
+          isGroup: chat.id._serialized.endsWith('@g.us'),
           unreadCount: chat.unreadCount,
           timestamp: chat.timestamp,
           lastMessage: { viewed: chat.lastMessage?._data?.viewed, body: chat.lastMessage?.body },
@@ -112,6 +132,69 @@ export async function getClientChats(req: Request, res: Response, next: NextFunc
       500,
       `Error retrieving WhatsApp chats. \n ${error}`,
       `Error retrieving WhatsApp chats. \n ${error}`
+    );
+    next(finalError);
+  }
+}
+
+export async function getChatById(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { chatId } = req.params;
+
+    if (!chatId) {
+      res.status(400).send({ message: 'Chat ID is required.' });
+      return;
+    }
+
+    const chat = await whatsappClient.getChatById(chatId);
+
+    if (!chat) {
+      res.status(404).send({ message: 'Chat not found.' });
+      return;
+    }
+
+    const profilePicUrl = await whatsappClient.getProfilePicUrl(chat.id._serialized).catch(() => {});
+
+    const chatData: WChat = {
+      id: chat.id._serialized,
+      name: chat.name,
+      isGroup: chat.isGroup,
+      unreadCount: chat.unreadCount,
+      timestamp: chat.timestamp,
+      lastMessage: { viewed: chat.lastMessage?._data?.viewed, body: chat.lastMessage?.body },
+      profilePicUrl,
+    };
+
+    res.send({ message: 'Chat retrieved successfully.', chat: chatData });
+  } catch (error) {
+    const finalError = new CustomError(
+      500,
+      `Error retrieving WhatsApp chat by ID. \n ${error}`,
+      `Error retrieving WhatsApp chat by ID. \n ${error}`
+    );
+    next(finalError);
+  }
+}
+
+export async function getPrimitiveChatMessages(req: Request, res: Response, next: NextFunction): Promise<void> {
+  const { chatId } = req.params;
+
+  try {
+    const chat = await whatsappClient.getChatById(chatId);
+
+    if (!chat) {
+      res.status(404).send({ message: `Chat with ID ${chatId} not found.` });
+      return;
+    }
+
+    const messages: any[] = await chat.fetchMessages({ limit: 50 });
+
+    res.send({ message: 'Messages retrieved successfully.', messages });
+  } catch (error) {
+    const finalError = new CustomError(
+      500,
+      `Error retrieving WhatsApp chat messages. \n ${error}`,
+      `Error retrieving WhatsApp chat messages. \n ${error}`
     );
     next(finalError);
   }

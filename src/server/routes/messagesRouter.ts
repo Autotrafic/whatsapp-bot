@@ -4,10 +4,13 @@ import {
   sendFirstTouchMessage,
   searchRegexInChat,
   sendMessage,
-  getClientChats,
+  getChats,
   getChatMessages,
   sendSeenChat,
   sendMessageToChat,
+  getChatById,
+  getPrimitiveChats,
+  getPrimitiveChatMessages,
 } from '../controllers/whatsappController';
 
 const upload = multer({ limits: { fileSize: 2 * 1024 * 1024 * 1024 }, dest: 'uploads/' });
@@ -16,12 +19,16 @@ const messagesRouter = express.Router();
 
 messagesRouter.post('/send', sendMessage);
 messagesRouter.post('/send-any-chat', upload.any(), sendMessageToChat);
-
-messagesRouter.get('/chats', getClientChats);
-messagesRouter.get('/chat-messages/:chatId', getChatMessages);
-messagesRouter.get('/seen-chat/:chatId', sendSeenChat);
-
 messagesRouter.post('/first-touch-whtspp', sendFirstTouchMessage);
+
+messagesRouter.get('/chats', getChats);
+messagesRouter.get('/chats/:chatId', getChatById);
+messagesRouter.get('/seen-chat/:chatId', sendSeenChat);
+messagesRouter.get('/chats-primitive', getPrimitiveChats);
+
+messagesRouter.get('/chat-messages/:chatId', getChatMessages);
+messagesRouter.get('/chat-messages-primitive/:chatId', getPrimitiveChatMessages);
+
 
 messagesRouter.post('/search-regex', searchRegexInChat);
 
