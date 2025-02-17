@@ -27,7 +27,7 @@ export async function getPrimitiveChats(req: Request, res: Response, next: NextF
   }
 }
 
-export async function sendMessage(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function sendMessageToNumber(req: Request, res: Response, next: NextFunction): Promise<void> {
   const { phoneNumber, message } = req.body;
 
   const chatId = `${phoneNumber}@c.us`;
@@ -120,7 +120,11 @@ export async function getChats(req: Request, res: Response, next: NextFunction):
           isGroup: chat.id._serialized.endsWith('@g.us'),
           unreadCount: chat.unreadCount,
           timestamp: chat.timestamp,
-          lastMessage: { viewed: chat.lastMessage?._data?.viewed, body: chat.lastMessage?.body },
+          lastMessage: {
+            viewed: chat.lastMessage?._data?.viewed,
+            fromMe: chat.lastMessage.id.fromMe,
+            body: chat.lastMessage?.body,
+          },
           profilePicUrl,
         };
       })
@@ -161,7 +165,11 @@ export async function getChatById(req: Request, res: Response, next: NextFunctio
       isGroup: chat.isGroup,
       unreadCount: chat.unreadCount,
       timestamp: chat.timestamp,
-      lastMessage: { viewed: chat.lastMessage?._data?.viewed, body: chat.lastMessage?.body },
+      lastMessage: {
+        viewed: chat.lastMessage?._data?.viewed,
+        fromMe: chat.lastMessage.id.fromMe,
+        body: chat.lastMessage?.body,
+      },
       profilePicUrl,
     };
 

@@ -3,7 +3,7 @@ import multer from 'multer';
 import {
   sendFirstTouchMessage,
   searchRegexInChat,
-  sendMessage,
+  sendMessageToNumber,
   getChats,
   getChatMessages,
   sendSeenChat,
@@ -17,7 +17,7 @@ const upload = multer({ limits: { fileSize: 2 * 1024 * 1024 * 1024 }, dest: 'upl
 
 const messagesRouter = express.Router();
 
-messagesRouter.post('/send', sendMessage);
+messagesRouter.post('/send', sendMessageToNumber);
 messagesRouter.post('/send-any-chat', upload.any(), sendMessageToChat);
 messagesRouter.post('/first-touch-whtspp', sendFirstTouchMessage);
 
@@ -28,7 +28,6 @@ messagesRouter.get('/chats-primitive', getPrimitiveChats);
 
 messagesRouter.get('/chat-messages/:chatId', getChatMessages);
 messagesRouter.get('/chat-messages-primitive/:chatId', getPrimitiveChatMessages);
-
 
 messagesRouter.post('/search-regex', searchRegexInChat);
 
