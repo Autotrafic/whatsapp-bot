@@ -4,7 +4,7 @@ import { Request, Response, NextFunction } from 'express';
 import { Chat, Message, MessageMedia } from 'whatsapp-web.js';
 import CustomError from '../../errors/CustomError';
 import { whatsappClient } from '../../database/whatsapp';
-import { parseMessageFromPrimitive } from '../helpers/parser';
+import { parseChatFromPrimitive, parseMessageFromPrimitive } from '../helpers/parser';
 import { MediaFile, SendMediaRequest } from '../interfaces/import';
 import { cleanupFiles } from '../helpers/files';
 
@@ -113,20 +113,8 @@ export async function getChats(req: Request, res: Response, next: NextFunction):
 
     const chatsWithProfileImages: WChat[] = await Promise.all(
       chats.map(async (chat) => {
-        const profilePicUrl = await whatsappClient.getProfilePicUrl(chat.id._serialized).catch(() => {});
-        return {
-          id: chat.id._serialized,
-          name: chat.name,
-          isGroup: chat.id._serialized.endsWith('@g.us'),
-          unreadCount: chat.unreadCount,
-          timestamp: chat.timestamp,
-          lastMessage: {
-            viewed: chat.lastMessage?._data?.viewed,
-            fromMe: chat.lastMessage.id.fromMe,
-            body: chat.lastMessage?.body,
-          },
-          profilePicUrl,
-        };
+        const parsedChat = await parseChatFromPrimitive(chat, whatsappClient);
+        return parsedChat;
       })
     );
 
@@ -157,23 +145,9 @@ export async function getChatById(req: Request, res: Response, next: NextFunctio
       return;
     }
 
-    const profilePicUrl = await whatsappClient.getProfilePicUrl(chat.id._serialized).catch(() => {});
+    const parsedChat = await parseChatFromPrimitive(chat, whatsappClient);
 
-    const chatData: WChat = {
-      id: chat.id._serialized,
-      name: chat.name,
-      isGroup: chat.isGroup,
-      unreadCount: chat.unreadCount,
-      timestamp: chat.timestamp,
-      lastMessage: {
-        viewed: chat.lastMessage?._data?.viewed,
-        fromMe: chat.lastMessage.id.fromMe,
-        body: chat.lastMessage?.body,
-      },
-      profilePicUrl,
-    };
-
-    res.send({ message: 'Chat retrieved successfully.', chat: chatData });
+    res.send({ message: 'Chat retrieved successfully.', chat: parsedChat });
   } catch (error) {
     const finalError = new CustomError(
       500,

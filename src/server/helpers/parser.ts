@@ -26,3 +26,21 @@ export async function parseMessageFromPrimitive(message: any): Promise<WMessage>
     senderPhone: message._data?.author?.user || message._data?.from?.user,
   };
 }
+
+export async function parseChatFromPrimitive(chat: any, whatsappClient: any): Promise<WChat> {
+  const profilePicUrl = await whatsappClient.getProfilePicUrl(chat.id._serialized).catch(() => {});
+
+  return {
+    id: chat.id._serialized,
+    name: chat.name,
+    isGroup: chat.isGroup,
+    unreadCount: chat.unreadCount,
+    timestamp: chat.timestamp,
+    lastMessage: {
+      viewed: chat.lastMessage?._data?.viewed,
+      fromMe: chat.lastMessage?.id?.fromMe,
+      body: chat.lastMessage?.body,
+    },
+    profilePicUrl,
+  };
+}
