@@ -50,10 +50,11 @@ export async function sendMessageToChat(req: SendMediaRequest, res: Response, ne
   const files = req.files as Express.Multer.File[];
   const chatId = body.chatId;
   const message = body?.message;
+  const quotedMessageId = body?.quotedMessageId;
 
   try {
     if ((!files || files.length === 0) && message) {
-      await whatsappClient.sendMessage(chatId, message);
+      await whatsappClient.sendMessage(chatId, message, { quotedMessageId });
       res.send({ message: `Message sent successfully.` });
       return;
     }
@@ -82,10 +83,10 @@ export async function sendMessageToChat(req: SendMediaRequest, res: Response, ne
       }
 
       if (isFirstFile && message) {
-        await whatsappClient.sendMessage(chatId, media, { caption: message });
+        await whatsappClient.sendMessage(chatId, media, { caption: message, quotedMessageId });
         isFirstFile = false;
       } else {
-        await whatsappClient.sendMessage(chatId, media);
+        await whatsappClient.sendMessage(chatId, media, { quotedMessageId });
       }
     }
 

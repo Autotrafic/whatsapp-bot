@@ -4,6 +4,7 @@ export async function parseMessageFromPrimitive(message: any): Promise<WMessage>
   let mediaBase64: string | null = null;
   let vCard: any = null;
   let attachedContact = null;
+  let quotedMessage: WMessage | null = null;
 
   if (message.hasMedia) {
     try {
@@ -27,8 +28,12 @@ export async function parseMessageFromPrimitive(message: any): Promise<WMessage>
     }
   }
 
+  if (message.hasQuotedMsg) {
+    quotedMessage = await message.getQuotedMessage();
+  }
+
   return {
-    id: message.id.id,
+    id: message.id,
     chatId: message.id.remote,
     body: message.body,
     fromMe: message.id.fromMe,
@@ -43,6 +48,7 @@ export async function parseMessageFromPrimitive(message: any): Promise<WMessage>
     link: message.links?.[0] || null,
     vCard,
     attachedContact,
+    quotedMessage
   };
 }
 

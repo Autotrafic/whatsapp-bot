@@ -5,6 +5,7 @@ interface SendMediaRequest extends Request {
   body: {
     chatId: string;
     message?: string;
+    quotedMessageId?: string;
   };
 }
 

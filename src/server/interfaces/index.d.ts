@@ -9,7 +9,7 @@ interface WChat {
 }
 
 interface WMessage {
-  id: string;
+  id: { id: string; remote: string; _serialized: string; fromMe: boolean };
   chatId: string;
   body: string;
   fromMe: boolean;
@@ -28,4 +28,5 @@ interface WMessage {
     phone: string;
     img: string;
   } | null;
+  quotedMessage: WMessage | null;
 }
