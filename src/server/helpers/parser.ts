@@ -58,12 +58,12 @@ export async function parseChatFromPrimitive(chat: any, whatsappClient: any): Pr
   return {
     id: chat.id._serialized,
     name: chat.name,
-    isGroup: chat.isGroup,
+    isGroup: chat.id && chat.id.server == "g.us",
     unreadCount: chat.unreadCount,
     timestamp: chat.timestamp,
     lastMessage: {
       viewed: chat.lastMessage?._data?.viewed,
-      fromMe: chat.lastMessage?.fromMe, // Not working properly by Wweb.js
+      fromMe: chat.lastMessage?.fromMe,
       body: chat.lastMessage?.body,
     },
     profilePicUrl,
