@@ -45,6 +45,7 @@ export async function parseMessageFromPrimitive(message: any): Promise<WMessage>
     mimetype: message.hasMedia ? mediaBase64?.split(';')[0].replace('data:', '') : null,
     senderId: message._data?.author?._serialized || message._data?.from?._serialized,
     senderPhone: message._data?.author?.user || message._data?.from?.user,
+    contactName: null,
     link: message.links?.[0] || null,
     vCard,
     attachedContact,

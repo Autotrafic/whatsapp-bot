@@ -21,6 +21,7 @@ interface WMessage {
   mimetype: string | undefined;
   senderId: string;
   senderPhone: string;
+  contactName: string | null;
   link: { link: string; isSuspicious: boolean } | null;
   vCard: any;
   attachedContact: {

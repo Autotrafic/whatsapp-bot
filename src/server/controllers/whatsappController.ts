@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { Request, Response, NextFunction } from 'express';
-import { Chat, Message, MessageMedia } from 'whatsapp-web.js';
+import { Chat, GroupParticipant, Message, MessageMedia } from 'whatsapp-web.js';
 import CustomError from '../../errors/CustomError';
 import { whatsappClient } from '../../database/whatsapp';
 import { parseChatFromPrimitive, parseMessageFromPrimitive } from '../helpers/parser';
@@ -194,11 +194,32 @@ export async function getChatMessages(req: Request, res: Response, next: NextFun
       return;
     }
 
+    const isGroup = chat.id && chat.id.server == "g.us";
+    let participantsInfo: { id: string; name: string | null }[] = [];
+
+    if (isGroup) {
+      participantsInfo = await Promise.all(
+        chat.participants.map(async (participant: GroupParticipant) => {
+          const contact = await whatsappClient.getContactById(participant.id._serialized);
+          return {
+            id: participant.id._serialized,
+            name: contact ? contact.name || contact.pushname || null : null,
+          };
+        })
+      );
+    }
+
+
     const messages: any[] = await chat.fetchMessages({ limit: 50 });
 
     const messagesWithMedia = await Promise.all(
       messages.map(async (msg) => {
         const parsedMessage = await parseMessageFromPrimitive(msg);
+
+        if (isGroup) {
+          const participant = participantsInfo.find((p) => p.id === parsedMessage.senderId);
+          parsedMessage.contactName = participant ? participant.name : null;
+        }
 
         return parsedMessage;
       })
