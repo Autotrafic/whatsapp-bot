@@ -319,3 +319,53 @@ export async function searchChatByMessageRegex(req: Request, res: Response, next
     next(finalError);
   }
 }
+
+export async function editMessage(req: Request, res: Response, next: NextFunction): Promise<void> {
+  const { messageId, newMessage } = req.body;
+
+  try {
+    const message = await whatsappClient.getMessageById(messageId);
+    
+    if (!message) {
+      return next(new CustomError(404, 'Message not found.', 'No message found with the provided ID.'));
+    }
+
+    const editedMessage = await message.edit(newMessage);
+
+    if (!editedMessage) {
+      return next(new CustomError(500, 'Failed to edit message.', 'Message could not be edited.'));
+    }
+
+    res.send({ message: 'Message edited successfully.', editedMessage });
+  } catch (error) {
+    const finalError = new CustomError(
+      500,
+      'Error editing WhatsApp message.',
+      `Error editing WhatsApp message. \n ${error}`
+    );
+    next(finalError);
+  }
+}
+
+export async function deleteMessage(req: Request, res: Response, next: NextFunction): Promise<void> {
+  const { messageId } = req.params;
+
+  try {
+    const message = await whatsappClient.getMessageById(messageId);
+    
+    if (!message) {
+      return next(new CustomError(404, 'Message not found.', 'No message found with the provided ID.'));
+    }
+
+    await message.delete(true);
+
+    res.send({ message: 'Message deleted successfully.' });
+  } catch (error) {
+    const finalError = new CustomError(
+      500,
+      'Error deleting WhatsApp message.',
+      `Error deleting WhatsApp message. \n ${error}`
+    );
+    next(finalError);
+  }
+}

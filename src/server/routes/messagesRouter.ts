@@ -12,6 +12,8 @@ import {
   getPrimitiveChats,
   getPrimitiveChatMessages,
   searchChatByMessageRegex,
+  editMessage,
+  deleteMessage,
 } from '../controllers/whatsappController';
 
 const upload = multer({ limits: { fileSize: 2 * 1024 * 1024 * 1024 }, dest: 'uploads/' });
@@ -32,5 +34,8 @@ messagesRouter.get('/chat-messages-primitive/:chatId', getPrimitiveChatMessages)
 
 messagesRouter.post('/search-regex', searchRegexInChat);
 messagesRouter.post('/search-chats-by-message', searchChatByMessageRegex);
+
+messagesRouter.post('/edit', editMessage);
+messagesRouter.get('/delete/:messageId', deleteMessage);
 
 export default messagesRouter;
