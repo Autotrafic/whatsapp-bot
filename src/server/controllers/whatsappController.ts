@@ -194,7 +194,7 @@ export async function getChatMessages(req: Request, res: Response, next: NextFun
       return;
     }
 
-    const isGroup = chat.id && chat.id.server == "g.us";
+    const isGroup = chat.id && chat.id.server == 'g.us';
     let participantsInfo: { id: string; name: string | null }[] = [];
 
     if (isGroup) {
@@ -209,17 +209,11 @@ export async function getChatMessages(req: Request, res: Response, next: NextFun
       );
     }
 
-
     const messages: any[] = await chat.fetchMessages({ limit: 50 });
 
     const messagesWithMedia = await Promise.all(
       messages.map(async (msg) => {
-        const parsedMessage = await parseMessageFromPrimitive(msg);
-
-        if (isGroup) {
-          const participant = participantsInfo.find((p) => p.id === parsedMessage.senderId);
-          parsedMessage.contactName = participant ? participant.name : null;
-        }
+        const parsedMessage = await parseMessageFromPrimitive(msg, isGroup, participantsInfo, whatsappClient);
 
         return parsedMessage;
       })

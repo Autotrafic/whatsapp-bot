@@ -1,10 +1,19 @@
 const vCardParser = require('vcard-parser');
 
-export async function parseMessageFromPrimitive(message: any): Promise<WMessage> {
+export async function parseMessageFromPrimitive(
+  message: any,
+  isGroup?: boolean,
+  participantsInfo?: { id: string; name: string }[],
+  whatsappClient?: any,
+): Promise<WMessage> {
+  const senderId = message._data?.author?._serialized || message._data?.from?._serialized;
+
   let mediaBase64: string | null = null;
   let vCard: any = null;
   let attachedContact = null;
   let quotedMessage: WMessage | null = null;
+  let contactName: string | null = null;
+  let mentionedContacts: { id: string; name: string }[] = [];
 
   if (message.hasMedia) {
     try {
@@ -32,6 +41,23 @@ export async function parseMessageFromPrimitive(message: any): Promise<WMessage>
     quotedMessage = await message.getQuotedMessage();
   }
 
+  if (isGroup) {
+    const participant = participantsInfo.find((p) => p.id === senderId);
+    contactName = participant ? participant.name : null;
+  }
+
+  for (const mentionedId of message.mentionedIds) {
+    if (isGroup) {
+      const participant = participantsInfo.find((p) => p.id === mentionedId._serialized);
+      if (participant) mentionedContacts.push({ id: participant.id, name: participant.name });
+    } else {
+      const contact = await whatsappClient.getContactById(mentionedId._serialized);
+      const contactName = contact ? contact.name || contact.pushname || null : mentionedId.user;
+
+      mentionedContacts.push({ id: mentionedId._serialized, name: contactName });
+    }
+  }
+
   return {
     id: message.id,
     chatId: message.id.remote,
@@ -43,13 +69,14 @@ export async function parseMessageFromPrimitive(message: any): Promise<WMessage>
     hasMedia: message.hasMedia,
     mediaUrl: mediaBase64,
     mimetype: message.hasMedia ? mediaBase64?.split(';')[0].replace('data:', '') : null,
-    senderId: message._data?.author?._serialized || message._data?.from?._serialized,
+    senderId,
     senderPhone: message._data?.author?.user || message._data?.from?.user,
     contactName: null,
     link: message.links?.[0] || null,
     vCard,
     attachedContact,
-    quotedMessage
+    quotedMessage,
+    mentionedContacts,
   };
 }
 
@@ -59,7 +86,7 @@ export async function parseChatFromPrimitive(chat: any, whatsappClient: any): Pr
   return {
     id: chat.id._serialized,
     name: chat.name,
-    isGroup: chat.id && chat.id.server == "g.us",
+    isGroup: chat.id && chat.id.server == 'g.us',
     unreadCount: chat.unreadCount,
     timestamp: chat.timestamp,
     lastMessage: {
