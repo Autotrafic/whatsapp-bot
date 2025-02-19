@@ -11,6 +11,7 @@ import {
   getChatById,
   getPrimitiveChats,
   getPrimitiveChatMessages,
+  searchChatByMessageRegex,
 } from '../controllers/whatsappController';
 
 const upload = multer({ limits: { fileSize: 2 * 1024 * 1024 * 1024 }, dest: 'uploads/' });
@@ -30,5 +31,6 @@ messagesRouter.get('/chat-messages/:chatId', getChatMessages);
 messagesRouter.get('/chat-messages-primitive/:chatId', getPrimitiveChatMessages);
 
 messagesRouter.post('/search-regex', searchRegexInChat);
+messagesRouter.post('/search-chats-by-message', searchChatByMessageRegex);
 
 export default messagesRouter;

@@ -211,7 +211,7 @@ export async function getChatMessages(req: Request, res: Response, next: NextFun
     }
 
     const messages: any[] = await chat.fetchMessages({ limit: 50 });
-    
+
     const messagesWithMedia = await Promise.all(
       messages.map(async (msg) => {
         const parsedMessage = await parseMessageFromPrimitive(msg, isGroup, participantsInfo, whatsappClient);
@@ -292,6 +292,24 @@ export async function searchRegexInChat(req: Request, res: Response, next: NextF
     const foundMessages = messages.slice(-limit).filter((message) => message.body.includes(searchString));
 
     res.status(200).send({ existsEquivalences: foundMessages.length > 0 ? true : false });
+  } catch (error) {
+    const finalError = new CustomError(
+      500,
+      'Error searching in WhatsApp messages.',
+      `Error searching in WhatsApp messages. \n ${error}`
+    );
+    next(finalError);
+  }
+}
+
+export async function searchChatByMessageRegex(req: Request, res: Response, next: NextFunction): Promise<void> {
+  const { searchString } = req.body;
+  try {
+    const foundMessages: Message[] = await whatsappClient.searchMessages(searchString);
+
+    const chatsIds = foundMessages.map((message) => message.id.remote);
+
+    res.status(200).send({ chatsContainingMessage: chatsIds });
   } catch (error) {
     const finalError = new CustomError(
       500,
