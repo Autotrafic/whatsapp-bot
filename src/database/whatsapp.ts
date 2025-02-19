@@ -87,7 +87,7 @@ const connectWhatsapp = () =>
     });
 
     whatsappClient.on('message_create', async (message: any) => {
-      if (sseClientManager['clients'].length > 0) {
+      if (sseClientManager['clients'].length > 0 && message.ack) {
         const parsedMessage = await parseMessageFromPrimitive(message);
 
         sseClientManager.broadcast('whatsapp-message', parsedMessage);
