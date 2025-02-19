@@ -30,5 +30,5 @@ interface WMessage {
     img: string;
   } | null;
   quotedMessage: WMessage | null;
-  mentionedContacts: { id: string; name: string }[];
+  mentionedContacts: { id: string; user: string; name: string }[];
 }

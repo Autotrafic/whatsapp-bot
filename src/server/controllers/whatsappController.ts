@@ -195,7 +195,7 @@ export async function getChatMessages(req: Request, res: Response, next: NextFun
     }
 
     const isGroup = chat.id && chat.id.server == 'g.us';
-    let participantsInfo: { id: string; name: string | null }[] = [];
+    let participantsInfo: { id: string; user: string; name: string | null }[] = [];
 
     if (isGroup) {
       participantsInfo = await Promise.all(
@@ -203,6 +203,7 @@ export async function getChatMessages(req: Request, res: Response, next: NextFun
           const contact = await whatsappClient.getContactById(participant.id._serialized);
           return {
             id: participant.id._serialized,
+            user: participant.id.user,
             name: contact ? contact.name || contact.pushname || null : null,
           };
         })
@@ -210,7 +211,7 @@ export async function getChatMessages(req: Request, res: Response, next: NextFun
     }
 
     const messages: any[] = await chat.fetchMessages({ limit: 50 });
-
+    
     const messagesWithMedia = await Promise.all(
       messages.map(async (msg) => {
         const parsedMessage = await parseMessageFromPrimitive(msg, isGroup, participantsInfo, whatsappClient);
