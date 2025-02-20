@@ -4,6 +4,7 @@ interface WChat {
   isGroup: boolean;
   unreadCount: number;
   timestamp: number;
+  pinned: boolean;
   lastMessage: { viewed: boolean; fromMe: boolean; body: string };
   profilePicUrl?: string;
 }

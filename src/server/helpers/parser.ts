@@ -89,6 +89,7 @@ export async function parseChatFromPrimitive(chat: any, whatsappClient: any): Pr
     isGroup: chat.id && chat.id.server == 'g.us',
     unreadCount: chat.unreadCount,
     timestamp: chat.timestamp,
+    pinned: chat.pinned,
     lastMessage: {
       viewed: chat.lastMessage?._data?.viewed,
       fromMe: chat.lastMessage?.fromMe,
