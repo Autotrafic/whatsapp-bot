@@ -33,7 +33,14 @@ export async function sendMessageToNumber(req: Request, res: Response, next: Nex
   const chatId = `${phoneNumber}@c.us`;
 
   try {
-    await whatsappClient.sendMessage(chatId, message);
+    const chat = await whatsappClient.getChatById(chatId);
+
+    if (!chat) {
+      await whatsappClient.sendMessage(chatId, message);
+    } else {
+      await chat.sendMessage(message);
+    }
+
     res.send({ message: `Message sent successfully.` });
   } catch (error) {
     const finalError = new CustomError(
@@ -325,7 +332,7 @@ export async function editMessage(req: Request, res: Response, next: NextFunctio
 
   try {
     const message = await whatsappClient.getMessageById(messageId);
-    
+
     if (!message) {
       return next(new CustomError(404, 'Message not found.', 'No message found with the provided ID.'));
     }
@@ -352,7 +359,7 @@ export async function deleteMessage(req: Request, res: Response, next: NextFunct
 
   try {
     const message = await whatsappClient.getMessageById(messageId);
-    
+
     if (!message) {
       return next(new CustomError(404, 'Message not found.', 'No message found with the provided ID.'));
     }
