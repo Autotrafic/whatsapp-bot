@@ -289,8 +289,8 @@ export async function sendFirstTouchMessage(req: Request, res: Response, next: N
 }
 
 export async function searchRegexInChat(req: Request, res: Response, next: NextFunction): Promise<void> {
-  const { phoneNumber, searchString, limit = 100 } = req.body;
-  const chatId = `${phoneNumber}@c.us`;
+  const { phoneNumber, searchString, chatExtension = '@c.us', limit = 100 } = req.body;
+  const chatId = `${phoneNumber}${chatExtension}`;
 
   try {
     const chat = await whatsappClient.getChatById(chatId);
