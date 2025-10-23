@@ -7,6 +7,7 @@ import { whatsappClient } from '../../database/whatsapp';
 import { parseChatFromPrimitive, parseMessageFromPrimitive } from '../helpers/parser';
 import { MediaFile, SendMediaRequest } from '../interfaces/import';
 import { cleanupFiles } from '../helpers/files';
+import { isSystemOrEmptyMessage } from '../helpers/funcs';
 
 export async function getPrimitiveChats(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -263,26 +264,42 @@ export async function sendSeenChat(req: Request, res: Response, next: NextFuncti
   }
 }
 
-export async function sendFirstTouchMessage(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function sendFirstTouchMessage(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   const { phoneNumber, message } = req.body;
-
   const chatId = `${phoneNumber}@c.us`;
 
   try {
     const chat = await whatsappClient.getChatById(chatId);
 
-    const messages = await chat.fetchMessages({ limit: 1 });
-    if (messages.length > 0) {
-      res.send(`This chat contains previous messages. Previous message: ${messages[0]}`);
-    } else {
-      await whatsappClient.sendMessage(chatId, message);
-      res.send({ message: `Message sent successfully.` });
+    const rawMessages = await chat.fetchMessages({ limit: 20 });
+
+    const meaningful = rawMessages.filter((m: any) => !isSystemOrEmptyMessage(m));
+
+    if (meaningful.length > 0) {
+      res.send({
+        info: 'This chat contains previous messages.',
+        previousSample: {
+          id: meaningful[0]?.id?._serialized ?? meaningful[0]?.id,
+          type: meaningful[0]?.type,
+          from: meaningful[0]?.from,
+          to: meaningful[0]?.to,
+          bodyPreview: (meaningful[0]?.body || '').slice(0, 200)
+        }
+      });
+      return;
     }
+
+    await whatsappClient.sendMessage(chatId, message);
+    res.send({ message: 'Message sent successfully.' });
   } catch (error) {
     const finalError = new CustomError(
       500,
       'Error sending WhatsApp message.',
-      `Error sending WhatsApp message. \n ${error}`
+      `Error sending WhatsApp message.\n${error}`
     );
     next(finalError);
   }
