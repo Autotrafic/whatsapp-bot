@@ -319,8 +319,8 @@ export async function searchRegexInChat(req: Request, res: Response, next: NextF
   } catch (error) {
     const finalError = new CustomError(
       500,
-      'Error searching in WhatsApp messages.',
-      `Error searching in WhatsApp messages. \n ${error}`
+      `Error searching in WhatsApp messages. \n ${error.message}`,
+      `Error searching in WhatsApp messages. \n ${error.messsage}`
     );
     next(finalError);
   }
@@ -337,8 +337,8 @@ export async function searchChatByMessageRegex(req: Request, res: Response, next
   } catch (error) {
     const finalError = new CustomError(
       500,
-      'Error searching in WhatsApp messages.',
-      `Error searching in WhatsApp messages. \n ${error}`
+      `Error searching in WhatsApp messages. \n ${error.message}`,
+      `Error searching in WhatsApp messages. \n ${error.message}`
     );
     next(finalError);
   }
