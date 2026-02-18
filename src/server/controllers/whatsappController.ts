@@ -270,7 +270,6 @@ export async function getChatMessages(req: Request, res: Response, next: NextFun
   }
 }
 
-
 export async function sendSeenChat(req: Request, res: Response, next: NextFunction): Promise<void> {
   const { chatId } = req.params;
 
