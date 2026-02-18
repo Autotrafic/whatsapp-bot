@@ -216,7 +216,6 @@ export async function getChatMessages(req: Request, res: Response, next: NextFun
       return;
     }
 
-    // chatId can be: phone, +34..., 34..., 34...@c.us, etc.
     const remoteJid = parsePhoneToRemoteJid(decodeURIComponent(chatId));
 
     const evo = await evolutionRequest<EvolutionFindMessagesResponse>(
@@ -231,13 +230,16 @@ export async function getChatMessages(req: Request, res: Response, next: NextFun
 
     const records = evo?.messages?.records ?? [];
 
+    // 👉 IMPORTANT CHANGE:
+    // No messages = empty array (not an error)
     if (records.length === 0) {
-      // Keep the old semantics: if chat not found -> 404
-      res.status(404).send({ message: `Chat with ID ${chatId} not found.` });
+      res.send({
+        message: 'No messages found for this chat.',
+        messages: [],
+      });
       return;
     }
 
-    // Map to a simple message shape your frontend can filter (body-based)
     const messages = records.map((r) => {
       const body = extractText(r);
 
@@ -254,7 +256,10 @@ export async function getChatMessages(req: Request, res: Response, next: NextFun
       };
     });
 
-    res.send({ message: 'Messages retrieved successfully.', messages });
+    res.send({
+      message: 'Messages retrieved successfully.',
+      messages,
+    });
   } catch (error: any) {
     const finalError = new CustomError(
       500,
@@ -264,6 +269,7 @@ export async function getChatMessages(req: Request, res: Response, next: NextFun
     next(finalError);
   }
 }
+
 
 export async function sendSeenChat(req: Request, res: Response, next: NextFunction): Promise<void> {
   const { chatId } = req.params;
