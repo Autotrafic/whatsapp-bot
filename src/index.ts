@@ -11,8 +11,8 @@ const mongoURL = process.env.MONGODB_URL;
     try {
         // await startTempServer(port);
 
-        await connectDB(mongoURL);
-        await connectWhatsapp();
+        // await connectDB(mongoURL);
+        // await connectWhatsapp();
 
         // await stopTempServer();
 

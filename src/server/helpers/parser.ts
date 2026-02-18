@@ -98,3 +98,39 @@ export async function parseChatFromPrimitive(chat: any, whatsappClient: any): Pr
     profilePicUrl,
   };
 }
+
+export function parsePhoneToRemoteJid(input: string): string {
+  if (!input) {
+    throw new Error("Phone is required");
+  }
+
+  let phone = input.trim();
+
+  // 1️⃣ eliminar dominio whatsapp si existe
+  phone = phone.replace(/@s\.whatsapp\.net|@c\.us/gi, "");
+
+  // 2️⃣ eliminar espacios, guiones, paréntesis, etc
+  phone = phone.replace(/[^\d+]/g, "");
+
+  // 3️⃣ eliminar +
+  if (phone.startsWith("+")) {
+    phone = phone.slice(1);
+  }
+
+  // 4️⃣ si empieza por 00 (formato internacional)
+  if (phone.startsWith("00")) {
+    phone = phone.slice(2);
+  }
+
+  // 5️⃣ si es número español sin prefijo (9 dígitos)
+  if (phone.length === 9) {
+    phone = "34" + phone;
+  }
+
+  // 6️⃣ validación básica
+  if (phone.length < 11 || phone.length > 15) {
+    throw new Error("Invalid phone format");
+  }
+
+  return `${phone}@s.whatsapp.net`;
+}

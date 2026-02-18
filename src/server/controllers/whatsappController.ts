@@ -4,10 +4,16 @@ import { Request, Response, NextFunction } from 'express';
 import { Chat, GroupParticipant, Message, MessageMedia } from 'whatsapp-web.js';
 import CustomError from '../../errors/CustomError';
 import { whatsappClient } from '../../database/whatsapp';
-import { parseChatFromPrimitive, parseMessageFromPrimitive } from '../helpers/parser';
+import { parseChatFromPrimitive, parseMessageFromPrimitive, parsePhoneToRemoteJid } from '../helpers/parser';
 import { MediaFile, SendMediaRequest } from '../interfaces/import';
 import { cleanupFiles } from '../helpers/files';
-import { isSystemOrEmptyMessage } from '../helpers/funcs';
+import { extractConversationText, isSystemOrEmptyMessage } from '../helpers/funcs';
+import {
+  EVOLUTION_INSTANCE_NAME,
+  evolutionRequest,
+  extractText,
+  isSystemOrEmptyEvolutionRecord,
+} from '../../database/evolution';
 
 export async function getPrimitiveChats(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -22,32 +28,41 @@ export async function getPrimitiveChats(req: Request, res: Response, next: NextF
     const finalError = new CustomError(
       500,
       `Error retrieving WhatsApp chats. \n ${error}`,
-      `Error retrieving WhatsApp chats. \n ${error}`
+      `Error retrieving WhatsApp chats. \n ${error}`,
     );
     next(finalError);
   }
 }
 
+//************EVOLUTION */
 export async function sendMessageToNumber(req: Request, res: Response, next: NextFunction): Promise<void> {
   const { phoneNumber, message } = req.body;
 
-  const chatId = `${phoneNumber}@c.us`;
-
   try {
-    const chat = await whatsappClient.getChatById(chatId);
-
-    if (!chat) {
-      await whatsappClient.sendMessage(chatId, message);
-    } else {
-      await chat.sendMessage(message);
+    if (!phoneNumber || typeof phoneNumber !== 'string') {
+      throw new Error('phoneNumber is required');
+    }
+    if (!message || typeof message !== 'string') {
+      throw new Error('message is required');
     }
 
-    res.send({ message: `Message sent successfully.` });
-  } catch (error) {
+    const remoteJid = parsePhoneToRemoteJid(phoneNumber);
+
+    // Evolution doesn't require checking if chat exists; just send.
+    await evolutionRequest('POST', `/message/sendText/${encodeURIComponent(EVOLUTION_INSTANCE_NAME)}`, {
+      number: remoteJid,
+      text: message,
+      // optional:
+      // delay: 1200,
+      // linkPreview: false,
+    });
+
+    res.send({ message: 'Message sent successfully.' });
+  } catch (error: any) {
     const finalError = new CustomError(
       500,
       'Error sending WhatsApp message.',
-      `Error sending WhatsApp message. \n ${error}`
+      `Error sending WhatsApp message. \n ${error?.message ?? String(error)}`,
     );
     next(finalError);
   }
@@ -106,7 +121,7 @@ export async function sendMessageToChat(req: SendMediaRequest, res: Response, ne
     const finalError = new CustomError(
       500,
       `Error sending WhatsApp message to a chat. \n ${error}`,
-      `Error sending WhatsApp message to a chat. \n ${error}`
+      `Error sending WhatsApp message to a chat. \n ${error}`,
     );
     next(finalError);
   }
@@ -124,7 +139,7 @@ export async function getChats(req: Request, res: Response, next: NextFunction):
       chats.map(async (chat) => {
         const parsedChat = await parseChatFromPrimitive(chat, whatsappClient);
         return parsedChat;
-      })
+      }),
     );
 
     res.send({ message: 'Chats retrieved successfully.', chats: chatsWithProfileImages });
@@ -132,7 +147,7 @@ export async function getChats(req: Request, res: Response, next: NextFunction):
     const finalError = new CustomError(
       500,
       `Error retrieving WhatsApp chats. \n ${error}`,
-      `Error retrieving WhatsApp chats. \n ${error}`
+      `Error retrieving WhatsApp chats. \n ${error}`,
     );
     next(finalError);
   }
@@ -161,7 +176,7 @@ export async function getChatById(req: Request, res: Response, next: NextFunctio
     const finalError = new CustomError(
       500,
       `Error retrieving WhatsApp chat by ID. \n ${error}`,
-      `Error retrieving WhatsApp chat by ID. \n ${error}`
+      `Error retrieving WhatsApp chat by ID. \n ${error}`,
     );
     next(finalError);
   }
@@ -185,55 +200,66 @@ export async function getPrimitiveChatMessages(req: Request, res: Response, next
     const finalError = new CustomError(
       500,
       `Error retrieving WhatsApp chat messages. \n ${error}`,
-      `Error retrieving WhatsApp chat messages. \n ${error}`
+      `Error retrieving WhatsApp chat messages. \n ${error}`,
     );
     next(finalError);
   }
 }
 
+//************EVOLUTION */
 export async function getChatMessages(req: Request, res: Response, next: NextFunction): Promise<void> {
   const { chatId } = req.params;
 
   try {
-    const chat = await whatsappClient.getChatById(chatId);
+    if (!chatId) {
+      res.status(400).send({ message: 'chatId is required.' });
+      return;
+    }
 
-    if (!chat) {
+    // chatId can be: phone, +34..., 34..., 34...@c.us, etc.
+    const remoteJid = parsePhoneToRemoteJid(decodeURIComponent(chatId));
+
+    const evo = await evolutionRequest<EvolutionFindMessagesResponse>(
+      'POST',
+      `/chat/findMessages/${encodeURIComponent(EVOLUTION_INSTANCE_NAME)}`,
+      {
+        where: { key: { remoteJid } },
+        page: 1,
+        offset: 50,
+      },
+    );
+
+    const records = evo?.messages?.records ?? [];
+
+    if (records.length === 0) {
+      // Keep the old semantics: if chat not found -> 404
       res.status(404).send({ message: `Chat with ID ${chatId} not found.` });
       return;
     }
 
-    const isGroup = chat.id && chat.id.server == 'g.us';
-    let participantsInfo: { id: string; user: string; name: string | null }[] = [];
+    // Map to a simple message shape your frontend can filter (body-based)
+    const messages = records.map((r) => {
+      const body = extractText(r);
 
-    if (isGroup) {
-      participantsInfo = await Promise.all(
-        chat.participants.map(async (participant: GroupParticipant) => {
-          const contact = await whatsappClient.getContactById(participant.id._serialized);
-          return {
-            id: participant.id._serialized,
-            user: participant.id.user,
-            name: contact ? contact.name || contact.pushname || null : null,
-          };
-        })
-      );
-    }
+      return {
+        id: r?.id ?? r?.key?.id ?? null,
+        body,
+        type: r?.messageType ?? 'conversation',
+        fromMe: Boolean(r?.key?.fromMe),
+        from: r?.key?.fromMe ? 'me' : remoteJid,
+        to: r?.key?.fromMe ? remoteJid : 'me',
+        timestamp: r?.messageTimestamp ?? null,
+        remoteJid,
+        pushName: r?.pushName ?? null,
+      };
+    });
 
-    const messages: any[] = await chat.fetchMessages({ limit: 50 });
-
-    const messagesWithMedia = await Promise.all(
-      messages.map(async (msg) => {
-        const parsedMessage = await parseMessageFromPrimitive(msg, isGroup, participantsInfo, whatsappClient);
-
-        return parsedMessage;
-      })
-    );
-
-    res.send({ message: 'Messages retrieved successfully.', messages: messagesWithMedia });
-  } catch (error) {
+    res.send({ message: 'Messages retrieved successfully.', messages });
+  } catch (error: any) {
     const finalError = new CustomError(
       500,
-      `Error retrieving WhatsApp chat messages. \n ${error}`,
-      `Error retrieving WhatsApp chat messages. \n ${error}`
+      `Error retrieving WhatsApp chat messages. \n ${error?.message ?? String(error)}`,
+      `Error retrieving WhatsApp chat messages. \n ${error?.message ?? String(error)}`,
     );
     next(finalError);
   }
@@ -258,69 +284,115 @@ export async function sendSeenChat(req: Request, res: Response, next: NextFuncti
     const finalError = new CustomError(
       500,
       `Error sending seen Whatsapp chat. \n ${error}`,
-      `Error sending seen Whatsapp chat. \n ${error}`
+      `Error sending seen Whatsapp chat. \n ${error}`,
     );
     next(finalError);
   }
 }
 
-export async function sendFirstTouchMessage(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
+//************EVOLUTION */
+export async function sendFirstTouchMessage(req: Request, res: Response, next: NextFunction): Promise<void> {
   const { phoneNumber, message } = req.body;
-  const chatId = `${phoneNumber}@c.us`;
 
   try {
-    const chat = await whatsappClient.getChatById(chatId);
+    if (!phoneNumber || typeof phoneNumber !== 'string') {
+      throw new Error('phoneNumber is required');
+    }
+    if (!message || typeof message !== 'string') {
+      throw new Error('message is required');
+    }
 
-    const rawMessages = await chat.fetchMessages({ limit: 20 });
+    const remoteJid = parsePhoneToRemoteJid(phoneNumber);
 
-    const meaningful = rawMessages.filter((m: any) => !isSystemOrEmptyMessage(m));
+    // 1) Mirar últimos mensajes en el chat (si hay algo "significativo", NO enviamos)
+    const history = await evolutionRequest<EvolutionFindMessagesResponse>(
+      'POST',
+      `/chat/findMessages/${encodeURIComponent(EVOLUTION_INSTANCE_NAME)}`,
+      {
+        where: { key: { remoteJid } },
+        page: 1,
+        offset: 20,
+      },
+    );
+
+    const records = history?.messages?.records ?? [];
+    const meaningful = records.filter((r) => !isSystemOrEmptyEvolutionRecord(r));
 
     if (meaningful.length > 0) {
+      const first = meaningful[0];
+      const preview = extractConversationText(first).slice(0, 200);
+
       res.send({
         info: 'This chat contains previous messages.',
         previousSample: {
-          id: meaningful[0]?.id?._serialized ?? meaningful[0]?.id,
-          type: meaningful[0]?.type,
-          from: meaningful[0]?.from,
-          to: meaningful[0]?.to,
-          bodyPreview: (meaningful[0]?.body || '').slice(0, 200)
-        }
+          id: first?.id,
+          type: first?.messageType,
+          remoteJid,
+          bodyPreview: preview,
+        },
       });
       return;
     }
 
-    await whatsappClient.sendMessage(chatId, message);
+    // 2) Enviar el primer mensaje (first touch)
+    await evolutionRequest('POST', `/message/sendText/${encodeURIComponent(EVOLUTION_INSTANCE_NAME)}`, {
+      number: remoteJid, // Evolution acepta remoteJid en "number" según tu doc
+      text: message,
+      // options opcionales:
+      // delay: 1200,
+      // linkPreview: false,
+    });
+
     res.send({ message: 'Message sent successfully.' });
-  } catch (error) {
+  } catch (error: any) {
     const finalError = new CustomError(
       500,
       'Error sending WhatsApp message.',
-      `Error sending WhatsApp message.\n${error}`
+      `Error sending WhatsApp message.\n${error?.message ?? String(error)}`,
     );
     next(finalError);
   }
 }
 
+//************EVOLUTION */
 export async function searchRegexInChat(req: Request, res: Response, next: NextFunction): Promise<void> {
-  const { phoneNumber, searchString, chatExtension = '@c.us', limit = 100 } = req.body;
-  const chatId = `${phoneNumber}${chatExtension}`;
+  const { phoneNumber, searchString, limit = 100 } = req.body;
 
   try {
-    const chat = await whatsappClient.getChatById(chatId);
-    const messages = (await chat.fetchMessages()) as Message[];
+    if (!phoneNumber || typeof phoneNumber !== 'string') {
+      throw new Error('phoneNumber is required');
+    }
+    if (!searchString || typeof searchString !== 'string') {
+      throw new Error('searchString is required');
+    }
 
-    const foundMessages = messages.slice(-limit).filter((message) => message.body.includes(searchString));
+    const remoteJid = parsePhoneToRemoteJid(phoneNumber);
 
-    res.status(200).send({ existsEquivalences: foundMessages.length > 0 ? true : false });
-  } catch (error) {
+    // Evolution: paginado con page + offset
+    // offset = número de registros por página (según doc)
+    const offset = Math.min(Math.max(Number(limit) || 100, 1), 500);
+
+    const evo = await evolutionRequest<EvolutionFindMessagesResponse>(
+      'POST',
+      `/chat/findMessages/${encodeURIComponent(EVOLUTION_INSTANCE_NAME)}`,
+      {
+        where: { key: { remoteJid } },
+        page: 1,
+        offset,
+      },
+    );
+
+    const records = evo?.messages?.records ?? [];
+
+    // Buscar texto (tu función original hacía includes, no regex real)
+    const exists = records.some((r) => extractConversationText(r).includes(searchString));
+
+    res.status(200).send({ existsEquivalences: exists });
+  } catch (error: any) {
     const finalError = new CustomError(
       500,
-      `Error searching in WhatsApp messages. \n ${error.message}`,
-      `Error searching in WhatsApp messages. \n ${error.messsage}`
+      `Error searching in WhatsApp messages. \n ${error?.message ?? String(error)}`,
+      `Error searching in WhatsApp messages. \n ${error?.message ?? String(error)}`,
     );
     next(finalError);
   }
@@ -338,7 +410,7 @@ export async function searchChatByMessageRegex(req: Request, res: Response, next
     const finalError = new CustomError(
       500,
       `Error searching in WhatsApp messages. \n ${error.message}`,
-      `Error searching in WhatsApp messages. \n ${error.message}`
+      `Error searching in WhatsApp messages. \n ${error.message}`,
     );
     next(finalError);
   }
@@ -365,7 +437,7 @@ export async function editMessage(req: Request, res: Response, next: NextFunctio
     const finalError = new CustomError(
       500,
       'Error editing WhatsApp message.',
-      `Error editing WhatsApp message. \n ${error}`
+      `Error editing WhatsApp message. \n ${error}`,
     );
     next(finalError);
   }
@@ -388,7 +460,7 @@ export async function deleteMessage(req: Request, res: Response, next: NextFunct
     const finalError = new CustomError(
       500,
       'Error deleting WhatsApp message.',
-      `Error deleting WhatsApp message. \n ${error}`
+      `Error deleting WhatsApp message. \n ${error}`,
     );
     next(finalError);
   }

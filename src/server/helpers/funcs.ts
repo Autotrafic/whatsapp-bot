@@ -14,3 +14,16 @@ export function isSystemOrEmptyMessage(msg: any): boolean {
 
   return isHistory || systemTypes.has(msg.type) || (!hasBody && !hasAnyMedia);
 }
+
+export function extractConversationText(record: EvolutionFindMessagesResponse["messages"]["records"][number]): string {
+  // Según tu doc: el contenido suele estar en message.conversation
+  // Pero a veces puede venir en otros tipos; lo cubrimos por seguridad.
+  return (
+    record?.message?.conversation ??
+    record?.message?.extendedTextMessage?.text ??
+    record?.message?.imageMessage?.caption ??
+    record?.message?.videoMessage?.caption ??
+    record?.message?.documentMessage?.caption ??
+    ""
+  );
+}
