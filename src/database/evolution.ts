@@ -1,9 +1,9 @@
 import axios, { AxiosInstance } from 'axios';
 import { extractConversationText } from '../server/helpers/funcs';
 
-export const EVOLUTION_API = 'https://n8n-evolution-api.i6stl9.easypanel.host/';
+export const EVOLUTION_API = 'http://n8n-evolution-api.kt2mnn.easypanel.host/';
 export const EVOLUTION_API_KEY = '429683C4C977415CAAFCCE10F7D57E11';
-export const EVOLUTION_INSTANCE_KEY = 'E202A1752316-499B-883B-B1F8706A6AB1';
+export const EVOLUTION_INSTANCE_KEY = '81AD499C570C-4A86-8A40-DEA3678AC514';
 export const EVOLUTION_INSTANCE_NAME = 'AutoTrafic';
 
 const evolutionClient: AxiosInstance = axios.create({
