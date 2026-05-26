@@ -1,4 +1,4 @@
-import "./loadEnvironment";
+import "../loadEnvironment";
 import axios, { AxiosInstance } from 'axios';
 import { extractConversationText } from '../server/helpers/funcs';
 import { EvolutionFindMessagesResponse } from './models/evolution';
