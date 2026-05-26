@@ -1,11 +1,12 @@
+import "./loadEnvironment";
 import axios, { AxiosInstance } from 'axios';
 import { extractConversationText } from '../server/helpers/funcs';
 import { EvolutionFindMessagesResponse } from './models/evolution';
 
-export const EVOLUTION_API = 'https://n8n-evolution-api.kt2mnn.easypanel.host/';
-export const EVOLUTION_API_KEY = '429683C4C977415CAAFCCE10F7D57E11';
-export const EVOLUTION_INSTANCE_KEY = 'FA110D77A793-423C-9011-54E3AAC16AE8';
-export const EVOLUTION_INSTANCE_NAME = 'Comunidad 365';
+export const EVOLUTION_API = process.env.EVOLUTION_API;
+export const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY;
+export const EVOLUTION_INSTANCE_KEY = process.env.EVOLUTION_INSTANCE_KEY;
+export const EVOLUTION_INSTANCE_NAME = process.env.EVOLUTION_INSTANCE_NAME;
 
 const evolutionClient: AxiosInstance = axios.create({
   baseURL: EVOLUTION_API,

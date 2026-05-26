@@ -6,6 +6,8 @@ export async function handleMessageUpsert(message: EvolutionMessage) {
   const isFromMe = message.key.fromMe;
   const chatJid = message.key.remoteJid;
 
+  console.log(`Is from me: ${message.key.fromMe} or ${isFromMe}, chatJid: ${chatJid}`);
+
   if (isFromMe) return;
 
   const isTargetGroup = chatJid === TARGET_GROUP_JID;

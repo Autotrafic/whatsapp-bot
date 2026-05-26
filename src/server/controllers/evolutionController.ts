@@ -4,6 +4,7 @@ import { EVOLUTION_INSTANCE_NAME, evolutionRequest } from "../../database/evolut
 import CustomError from "../../errors/CustomError";
 import { EvolutionWebhook } from "../../database/models/evolution";
 import { handleMessageUpsert } from "../helpers/365";
+import { EvolutionEvent } from "../interfaces/enums";
 
 export async function sendMessageToNumber(req: Request, res: Response, next: NextFunction): Promise<void> {
   const { phoneNumber, message } = req.body;
@@ -41,10 +42,10 @@ export async function getEvolutionWebhook(req: Request<{}, {}, EvolutionWebhook>
 
   try {
     console.info(`Received Evolution webhook event: ${event} with data: ${JSON.stringify(data)}`);
-    
+
     switch (event) {
-      case "MESSAGES_UPSERT":
-        console.info(`Handling MESSAGES_UPSERT event: ${JSON.stringify(data)}`);
+      case EvolutionEvent.MessagesUpsert:
+        console.info(`Handling messages.upsert event: ${JSON.stringify(data)}`);
         await handleMessageUpsert(data);
         break;
 
