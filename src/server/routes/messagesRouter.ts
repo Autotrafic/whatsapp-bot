@@ -3,7 +3,6 @@ import multer from 'multer';
 import {
   sendFirstTouchMessage,
   searchRegexInChat,
-  sendMessageToNumber,
   getChats,
   getChatMessages,
   sendSeenChat,
@@ -15,6 +14,7 @@ import {
   editMessage,
   deleteMessage,
 } from '../controllers/whatsappController';
+import { getEvolutionWebhook, sendMessageToNumber } from '../controllers/evolutionController';
 
 const upload = multer({ limits: { fileSize: 2 * 1024 * 1024 * 1024 }, dest: 'uploads/' });
 
@@ -37,5 +37,7 @@ messagesRouter.post('/search-chats-by-message', searchChatByMessageRegex);
 
 messagesRouter.post('/edit', editMessage);
 messagesRouter.get('/delete/:messageId', deleteMessage);
+
+messagesRouter.post('/evolution-webhook', upload.any(), getEvolutionWebhook);
 
 export default messagesRouter;

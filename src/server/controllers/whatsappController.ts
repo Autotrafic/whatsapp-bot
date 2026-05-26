@@ -14,6 +14,7 @@ import {
   extractText,
   isSystemOrEmptyEvolutionRecord,
 } from '../../database/evolution';
+import { EvolutionFindMessagesResponse } from '../../database/models/evolution';
 
 export async function getPrimitiveChats(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -34,39 +35,7 @@ export async function getPrimitiveChats(req: Request, res: Response, next: NextF
   }
 }
 
-//************EVOLUTION */
-export async function sendMessageToNumber(req: Request, res: Response, next: NextFunction): Promise<void> {
-  const { phoneNumber, message } = req.body;
 
-  try {
-    if (!phoneNumber || typeof phoneNumber !== 'string') {
-      throw new Error('phoneNumber is required');
-    }
-    if (!message || typeof message !== 'string') {
-      throw new Error('message is required');
-    }
-
-    const remoteJid = parsePhoneToRemoteJid(phoneNumber);
-
-    // Evolution doesn't require checking if chat exists; just send.
-    await evolutionRequest('POST', `/message/sendText/${encodeURIComponent(EVOLUTION_INSTANCE_NAME)}`, {
-      number: remoteJid,
-      text: message,
-      // optional:
-      // delay: 1200,
-      // linkPreview: false,
-    });
-
-    res.send({ message: 'Message sent successfully.' });
-  } catch (error: any) {
-    const finalError = new CustomError(
-      500,
-      'Error sending WhatsApp message.',
-      `Error sending WhatsApp message. \n ${error?.message ?? String(error)}`,
-    );
-    next(finalError);
-  }
-}
 
 export async function sendMessageToChat(req: SendMediaRequest, res: Response, next: NextFunction): Promise<void> {
   const body = { ...req.body };
@@ -390,7 +359,7 @@ export async function searchRegexInChat(req: Request, res: Response, next: NextF
     const records = evo?.messages?.records ?? [];
 
     // Buscar texto (tu función original hacía includes, no regex real)
-    const exists = records.some((r) => extractConversationText(r).includes(searchString));
+    const exists = records.some((r: any) => extractConversationText(r).includes(searchString));
 
     res.status(200).send({ existsEquivalences: exists });
   } catch (error: any) {

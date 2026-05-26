@@ -1,3 +1,5 @@
+import { EvolutionFindMessagesResponse } from "../../database/models/evolution";
+
 export function isSystemOrEmptyMessage(msg: any): boolean {
   const systemTypes = new Set([
     'e2e_notification',
