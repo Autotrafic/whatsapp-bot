@@ -8,6 +8,8 @@ export const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY;
 export const EVOLUTION_INSTANCE_KEY = process.env.EVOLUTION_INSTANCE_KEY;
 export const EVOLUTION_INSTANCE_NAME = process.env.EVOLUTION_INSTANCE_NAME;
 
+export const TARGET_GROUP_JID = "120363435768001298@g.us";
+
 const evolutionClient: AxiosInstance = axios.create({
   baseURL: EVOLUTION_API,
   headers: {
