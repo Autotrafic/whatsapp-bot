@@ -10,8 +10,6 @@ export async function handleMessageUpsert(message: EvolutionMessage) {
   const isTargetGroup = chatJid === TARGET_GROUP_JID;
   const isVideoNote = message.messageType === "ptvMessage";
 
-  console.log(`Is target group: ${isTargetGroup}, is video note: ${isVideoNote}`);
-
   if (isTargetGroup && isVideoNote) {
     await handleVideoNoteInTargetGroup(message);
   }
@@ -19,7 +17,7 @@ export async function handleMessageUpsert(message: EvolutionMessage) {
 
 async function handleVideoNoteInTargetGroup(message: EvolutionMessage) {
   const groupJid = message.key.remoteJid;
-  const senderJid = message.key.participant;
+  const senderJid = message.key.participantAlt;
   const messageId = message.key.id;
 
   console.log("Nota de vídeo recibida en el grupo objetivo:", {
@@ -30,12 +28,5 @@ async function handleVideoNoteInTargetGroup(message: EvolutionMessage) {
 
   /**
    * Aquí pones la acción que quieras:
-   * - sumar streak
-   * - guardar check-in en DB
-   * - responder al grupo
-   * - llamar a otro servicio
    */
-
-  // ejemplo:
-  // await addUserStreak(senderJid);
 }

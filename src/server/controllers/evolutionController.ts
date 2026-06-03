@@ -6,6 +6,34 @@ import { EvolutionWebhook } from "../../database/models/evolution";
 import { handleMessageUpsert } from "../helpers/365";
 import { EvolutionEvent } from "../interfaces/enums";
 
+export async function getEvolutionWebhook(req: Request<{}, {}, EvolutionWebhook>, res: Response, next: NextFunction): Promise<void> {
+  const { event, data } = req.body;
+
+  try {
+    console.info(`Received Evolution webhook event: ${event} with data: ${JSON.stringify(data)}`);
+
+    switch (event) {
+      case EvolutionEvent.MessagesUpsert:
+        console.info(`Handling messages.upsert event: ${JSON.stringify(data)}`);
+        await handleMessageUpsert(data);
+        break;
+
+      default:
+        console.log(`Unhandled Evolution event: ${event}`);
+        break;
+    }
+
+    res.send({ message: 'Event received successfully.' });
+  } catch (error: any) {
+    const finalError = new CustomError(
+      500,
+      'Error getting evolution webhook.',
+      `Error getting evolution webhook. \n ${error?.message ?? String(error)}`,
+    );
+    next(finalError);
+  }
+}
+
 export async function sendMessageToNumber(req: Request, res: Response, next: NextFunction): Promise<void> {
   const { phoneNumber, message } = req.body;
 
@@ -37,30 +65,3 @@ export async function sendMessageToNumber(req: Request, res: Response, next: Nex
   }
 }
 
-export async function getEvolutionWebhook(req: Request<{}, {}, EvolutionWebhook>, res: Response, next: NextFunction): Promise<void> {
-  const { event, data } = req.body;
-
-  try {
-    console.info(`Received Evolution webhook event: ${event} with data: ${JSON.stringify(data)}`);
-
-    switch (event) {
-      case EvolutionEvent.MessagesUpsert:
-        console.info(`Handling messages.upsert event: ${JSON.stringify(data)}`);
-        await handleMessageUpsert(data);
-        break;
-
-      default:
-        console.log(`Unhandled Evolution event: ${event}`);
-        break;
-    }
-
-    res.send({ message: 'Event received successfully.' });
-  } catch (error: any) {
-    const finalError = new CustomError(
-      500,
-      'Error getting evolution webhook.',
-      `Error getting evolution webhook. \n ${error?.message ?? String(error)}`,
-    );
-    next(finalError);
-  }
-}

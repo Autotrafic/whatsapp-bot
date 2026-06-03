@@ -40,7 +40,7 @@ export interface EvolutionMessage {
     remoteJid: string;
     fromMe: boolean;
     id: string;
-    participant?: string;
+    participantAlt?: string;
   };
 
   pushName?: string;
