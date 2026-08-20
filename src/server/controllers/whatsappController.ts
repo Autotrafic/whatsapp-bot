@@ -177,7 +177,7 @@ export async function getPrimitiveChatMessages(req: Request, res: Response, next
 
 //************EVOLUTION */
 export async function getChatMessages(req: Request, res: Response, next: NextFunction): Promise<void> {
-  const { chatId } = req.params;
+  const { chatId, evolutionInstanceSender = EVOLUTION_INSTANCE_NAME } = req.body;
 
   try {
     if (!chatId) {
@@ -189,7 +189,7 @@ export async function getChatMessages(req: Request, res: Response, next: NextFun
 
     const evo = await evolutionRequest<EvolutionFindMessagesResponse>(
       'POST',
-      `/chat/findMessages/${encodeURIComponent(EVOLUTION_INSTANCE_NAME)}`,
+      `/chat/findMessages/${encodeURIComponent(evolutionInstanceSender as string)}`,
       {
         where: { key: { remoteJid } },
         page: 1,
@@ -266,7 +266,7 @@ export async function sendSeenChat(req: Request, res: Response, next: NextFuncti
 
 //************EVOLUTION */
 export async function sendFirstTouchMessage(req: Request, res: Response, next: NextFunction): Promise<void> {
-  const { phoneNumber, message } = req.body;
+  const { phoneNumber, message, evolutionInstanceSender = EVOLUTION_INSTANCE_NAME } = req.body;
 
   try {
     if (!phoneNumber || typeof phoneNumber !== 'string') {
@@ -281,7 +281,7 @@ export async function sendFirstTouchMessage(req: Request, res: Response, next: N
     // 1) Mirar últimos mensajes en el chat (si hay algo "significativo", NO enviamos)
     const history = await evolutionRequest<EvolutionFindMessagesResponse>(
       'POST',
-      `/chat/findMessages/${encodeURIComponent(EVOLUTION_INSTANCE_NAME)}`,
+      `/chat/findMessages/${encodeURIComponent(evolutionInstanceSender)}`,
       {
         where: { key: { remoteJid } },
         page: 1,
@@ -309,7 +309,7 @@ export async function sendFirstTouchMessage(req: Request, res: Response, next: N
     }
 
     // 2) Enviar el primer mensaje (first touch)
-    await evolutionRequest('POST', `/message/sendText/${encodeURIComponent(EVOLUTION_INSTANCE_NAME)}`, {
+    await evolutionRequest('POST', `/message/sendText/${encodeURIComponent(evolutionInstanceSender as string)}`, {
       number: remoteJid, // Evolution acepta remoteJid en "number" según tu doc
       text: message,
       // options opcionales:
@@ -330,7 +330,7 @@ export async function sendFirstTouchMessage(req: Request, res: Response, next: N
 
 //************EVOLUTION */
 export async function searchRegexInChat(req: Request, res: Response, next: NextFunction): Promise<void> {
-  const { phoneNumber, searchString, limit = 100 } = req.body;
+  const { phoneNumber, evolutionInstanceSender = EVOLUTION_INSTANCE_NAME, searchString, limit = 100 } = req.body;
 
   try {
     if (!phoneNumber || typeof phoneNumber !== 'string') {
@@ -348,7 +348,7 @@ export async function searchRegexInChat(req: Request, res: Response, next: NextF
 
     const evo = await evolutionRequest<EvolutionFindMessagesResponse>(
       'POST',
-      `/chat/findMessages/${encodeURIComponent(EVOLUTION_INSTANCE_NAME)}`,
+      `/chat/findMessages/${encodeURIComponent(evolutionInstanceSender)}`,
       {
         where: { key: { remoteJid } },
         page: 1,

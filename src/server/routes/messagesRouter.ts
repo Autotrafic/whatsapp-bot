@@ -20,7 +20,7 @@ const upload = multer({ limits: { fileSize: 2 * 1024 * 1024 * 1024 }, dest: 'upl
 
 const messagesRouter = express.Router();
 
-// messagesRouter.post('/send', sendMessageToNumber);
+messagesRouter.post('/send', sendMessageToNumber);
 messagesRouter.post('/send-any-chat', upload.any(), sendMessageToChat);
 messagesRouter.post('/first-touch-whtspp', sendFirstTouchMessage);
 
@@ -29,7 +29,7 @@ messagesRouter.get('/chats/:chatId', getChatById);
 messagesRouter.get('/seen-chat/:chatId', sendSeenChat);
 messagesRouter.get('/chats-primitive', getPrimitiveChats);
 
-messagesRouter.get('/chat-messages/:chatId', getChatMessages);
+messagesRouter.post('/chat-messages', getChatMessages);
 messagesRouter.get('/chat-messages-primitive/:chatId', getPrimitiveChatMessages);
 
 messagesRouter.post('/search-regex', searchRegexInChat);

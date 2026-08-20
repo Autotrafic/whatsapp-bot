@@ -35,7 +35,7 @@ export async function getEvolutionWebhook(req: Request<{}, {}, EvolutionWebhook>
 }
 
 export async function sendMessageToNumber(req: Request, res: Response, next: NextFunction): Promise<void> {
-  const { phoneNumber, message } = req.body;
+  const { phoneNumber, message, evolutionInstanceSender = EVOLUTION_INSTANCE_NAME } = req.body;
 
   try {
     if (!phoneNumber || typeof phoneNumber !== 'string') {
@@ -48,7 +48,7 @@ export async function sendMessageToNumber(req: Request, res: Response, next: Nex
     const remoteJid = parsePhoneToRemoteJid(phoneNumber);
 
     // Evolution doesn't require checking if chat exists; just send.
-    await evolutionRequest('POST', `/message/sendText/${encodeURIComponent(EVOLUTION_INSTANCE_NAME)}`, {
+    await evolutionRequest('POST', `/message/sendText/${encodeURIComponent(evolutionInstanceSender)}`, {
       number: remoteJid,
       text: message,
       delay: 1200,
