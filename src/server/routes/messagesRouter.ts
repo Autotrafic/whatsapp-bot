@@ -22,7 +22,7 @@ const messagesRouter = express.Router();
 
 messagesRouter.post('/send', sendMessageToNumber);
 messagesRouter.post('/send-any-chat', upload.any(), sendMessageToChat);
-messagesRouter.post('/first-touch-whtspp', sendFirstTouchMessage);
+// messagesRouter.post('/first-touch-whtspp', sendFirstTouchMessage);
 
 messagesRouter.get('/chats', getChats);
 messagesRouter.get('/chats/:chatId', getChatById);
